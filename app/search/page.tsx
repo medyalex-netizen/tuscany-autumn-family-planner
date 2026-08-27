@@ -46,8 +46,8 @@ departurePoint: "",
 const questions = [
   {
   key: "tripLength",
-  title: "כמה ימים מתוכנן הטיול?",
-  helper: "אורך הטיול יעזור לנו לבחור כמה אזורים וכמה מקומות לינה לשלב.",
+  title: "מה משך הטיול המתוכנן?",
+  helper: "אורךמשך יעזור לנו לבחור כמה אזורים וכמה מקומות לינה לשלב.",
   options: [
     "4–5 ימים",
     "6–7 ימים",
@@ -285,7 +285,12 @@ function toggleLodgingPriority(value: string) {
       answers.baseArea &&
       answers.teenPriorities.length > 0
   );
-
+const requiredQuestionKeys: Array<keyof Answers> = [
+  "tripLength",
+  "travelStyle",
+  "scenicInterest",
+  "baseArea",
+];
   return (
     <main dir="rtl" className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-5xl">
@@ -305,9 +310,9 @@ function toggleLodgingPriority(value: string) {
           </h1>
 
           <p className="mt-5 max-w-3xl leading-8 text-slate-300">
-            ענו על השאלות כדי שהאפליקציה תבין את אופי הטיול. לאחר מכן אפשר
-            להמשיך להצעת מסלול ראשונית.
-          </p>
+  ענו על כמה שאלות שיעזרו לאתר להתאים את כיוון הטיול למשפחה,
+  לקצב ולסגנון שמתאימים לכם. לאחר מכן אפשר להמשיך לכיוון ראשוני.
+</p>
         </section>
 
         <section className="mt-8 space-y-6">
@@ -315,8 +320,9 @@ function toggleLodgingPriority(value: string) {
   <h2 className="text-2xl font-bold">מתי מתחיל הטיול?</h2>
 
   <p className="mt-2 leading-7 text-slate-300">
-    תאריך ההתחלה יעזור להתאים את המסלול לעונה ולימים המדויקים של הטיול.
-  </p>
+  תאריך ההתחלה יעזור להתאים את המסלול לעונה ולימים המדויקים של הטיול.
+  אם התאריך עדיין לא סופי, אפשר להשאיר את השדה ריק ולהמשיך.
+</p>
 
   <input
     type="date"
@@ -398,7 +404,15 @@ function toggleLodgingPriority(value: string) {
                 key={question.key}
                 className="rounded-3xl border border-white/10 bg-slate-900/80 p-6"
               >
-                <h2 className="text-2xl font-bold">{question.title}</h2>
+                <h2 className="flex flex-wrap items-center justify-start gap-3 text-right text-2xl font-bold">
+  <span>{question.title}</span>
+
+  {requiredQuestionKeys.includes(question.key as keyof Answers) && (
+    <span className="text-sm font-semibold text-amber-200">
+   חשוב להמשך
+</span>
+  )}
+</h2>
                 <p className="mt-2 leading-7 text-slate-300">
                   {question.helper}
                 </p>
@@ -435,9 +449,13 @@ const isSelected = isLodgingPriorities
           })}
 
           <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-            <h2 className="text-2xl font-bold">
-              מה חשוב במיוחד לנערה בת 13?
-            </h2>
+            <h2 className="flex flex-wrap items-center justify-start gap-3 text-right text-2xl font-bold">
+  <span>מה חשוב במיוחד לנערה בת 13?</span>
+
+  <span className="text-sm font-semibold text-amber-200">
+    חשוב להמשך
+  </span>
+</h2>
 
             <p className="mt-2 leading-7 text-slate-300">
   אפשר לבחור כמה תחומי עניין, כדי שהמסלול יתאים גם לה ולא רק למבוגרים.
@@ -458,7 +476,7 @@ const isSelected = isLodgingPriorities
                         : "border-white/10 bg-white/5 text-slate-100 hover:border-amber-300/70"
                     }`}
                   >
-                    {isSelected ? "✓ " : ""}
+                    {isSelected ? "? " : ""}
                     {option}
                   </button>
                 );
@@ -473,9 +491,11 @@ const isSelected = isLodgingPriorities
               <h2 className="text-2xl font-bold">התשובות נשמרות בדפדפן</h2>
 
               <p className="mt-2 text-slate-300">
-                {saved
-                  ? "התשובות נשמרו. אפשר להמשיך להצעת מסלול."
-                  : "בחרו תשובות ואז המשיכו להצעת מסלול."}
+                {hasEnoughAnswers
+  ? "התשובות מספיקות. אפשר להמשיך לכיוון ראשוני."
+  : saved
+    ? "התשובות נשמרו, אבל עדיין חסרות תשובות כמה תשובות חשובות להמשך."
+    : "בחרו תשובות ואז המשיכו לכיוון ראשוני."}
               </p>
             </div>
 
@@ -489,32 +509,45 @@ const isSelected = isLodgingPriorities
               </button>
 
               <Link
-                href="/results"
-                onClick={() => {
-  const teenPriority = answers.teenPriorities.join(", ");
+  href="/results"
+  aria-disabled={!hasEnoughAnswers}
+  tabIndex={hasEnoughAnswers ? 0 : -1}
+  onClick={(event) => {
+    if (!hasEnoughAnswers) {
+      event.preventDefault();
+      return;
+    }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({ ...answers, teenPriority })
-  );
-}}
-                className={`rounded-full px-6 py-3 text-center font-bold ${
-                  hasEnoughAnswers
-                    ? "bg-amber-300 text-slate-950 hover:bg-amber-200"
-                    : "bg-slate-700 text-slate-300"
-                }`}
-              >
-                המשך להצעת מסלול
-              </Link>
+    const teenPriority = answers.teenPriorities.join(", ");
+
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...answers, teenPriority })
+    );
+  }}
+  className={`rounded-full px-6 py-3 text-center font-bold ${
+    hasEnoughAnswers
+      ? "bg-amber-300 text-slate-950 hover:bg-amber-200"
+      : "cursor-not-allowed bg-slate-700 text-slate-300"
+  }`}
+>
+ המשך לכיוון ראשוני
+</Link>
             </div>
           </div>
 
           {!hasEnoughAnswers && (
-            <p className="mt-4 leading-7 text-amber-200">
-             מומלץ לענות לפחות על אורך הטיול, קצב הטיול, חשיבות הנופים והטבע,
-אזור לינה, ומה חשוב לנערה בת 13.
-            </p>
-          )}
+  <div className="mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4 text-amber-100">
+    <p className="font-semibold">
+      כדי להמשיך לכיוון ראשוני, עדיין חסרות כמה תשובות חשובות להמשך.
+    </p>
+
+    <p className="mt-2 leading-7">
+      ודאו שבחרתם: משך הטיול, קצב הטיול, חשיבות הנופים והטבע, אזור לינה,
+      ולפחות אפשרות אחת עבור מה חשוב לנערה בת 13.
+    </p>
+  </div>
+)}
         </section>
       </div>
     </main>

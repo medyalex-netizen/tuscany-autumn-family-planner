@@ -171,17 +171,21 @@ Only after that, suggest a realistic day-by-day itinerary.`;
             אחרי שהכיוון נראה נכון, אפשר להמשיך לעמוד ההנחיה למתכנן. שם תיווצר
             הנחיה מסודרת שאפשר להשתמש בה כדי לבנות מסלול מפורט יותר.
           </p>
-          <p className="mt-5 max-w-3xl leading-8 text-slate-300">
-            העמוד הזה מכין הנחיה מסודרת לפי התשובות שנשמרו. אפשר להשתמש בה כדי
-            לקבל מסלול מפורט יותר, ולאחר מכן להמשיך למסלול לדוגמה בתוך האפליקציה.
-          </p>
+          <h1 className="mt-3 text-4xl font-bold text-white">
+  הנחיית תכנון אישית להמשך
+</h1>
+
+<p className="mt-5 max-w-3xl leading-8 text-slate-300">
+  העמוד הזה מכין הנחיה מסודרת לפי התשובות שנשמרו. אפשר להשתמש בה כדי
+  לקבל מסלול מפורט יותר, ולאחר מכן להמשיך למסלול לדוגמה בתוך האתר.
+</p>
         </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
           <h2 className="text-2xl font-bold">התשובות המשפחתיות שנשמרו</h2>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <AnswerCard label="אורך הטיול" value={answers.tripLength} />
+            <AnswerCard label="משך הטיול" value={answers.tripLength} />
 
 <AnswerCard label="סגנון הטיול" value={answers.travelStyle} />
 

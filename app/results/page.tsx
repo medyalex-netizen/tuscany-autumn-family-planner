@@ -283,6 +283,11 @@ const baseAreaText =
 
   return "העדפות הנערה מצביעות על עניין ב" + parts.join(". בנוסף, ") + ".";
 })();
+const hasSavedAnswers = Object.values(answers).some((value) =>
+  Array.isArray(value)
+    ? value.length > 0
+    : typeof value === "string" && value.trim().length > 0
+);
 return (
     <main dir="rtl" className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl">
@@ -309,16 +314,36 @@ return (
           </h1>
 
           <p className="mt-5 max-w-3xl leading-8 text-slate-300">
-            העמוד הזה מציג רעיונות למסלול לפי התשובות שנשמרו. זה עדיין לא
+            העמוד הזה מציג כיוון ראשוני לפי התשובות שנשמרו. זה עדיין לא
             מסלול סופי, אלא בסיס טוב להמשך תכנון.
           </p>
         </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
           <h2 className="text-2xl font-bold">התשובות שנשמרו</h2>
+{!hasSavedAnswers && (
+  <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-5">
+    <p className="leading-8 text-slate-100">
+      עדיין לא נבחרו מספיק תשובות כדי להציג כיוון אישי. אפשר לחזור לשאלות
+      התכנון ולבחור את הפרטים החשובים להמשך.
+    </p>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <AnswerCard label="אורך הטיול" value={answers.tripLength} />
+    <Link
+      href="/search"
+      className="mt-4 inline-flex rounded-full bg-amber-300 px-5 py-3 font-bold text-slate-950 hover:bg-amber-200"
+    >
+      חזרה לשאלות התכנון
+    </Link>
+  </div>
+)}
+
+<div
+  className={
+    hasSavedAnswers ? "mt-5 grid gap-4 md:grid-cols-2" : "hidden"
+  }
+>
+          
+            <AnswerCard label="משך הטיול" value={answers.tripLength} />
 
 <AnswerCard
   label="תאריך התחלה"
@@ -365,9 +390,10 @@ return (
             <AnswerCard label="מה חשוב לנערה בת 13" value={teenText} />
           </div>
         </section>
-
+{hasSavedAnswers && (
+  <>
         <section className="mt-8">
-          <h2 className="text-3xl font-bold">כיוון לפי אורך הטיול</h2>
+          <h2 className="text-3xl font-bold">כיוון לפי משך הטיול</h2>
 
           <div className="mt-5 grid gap-5 md:grid-cols-3">
             {(
@@ -536,6 +562,9 @@ return (
             </Link>
           </div>
         </section>
+          </>
+)}
+
       </div>
     </main>
   );

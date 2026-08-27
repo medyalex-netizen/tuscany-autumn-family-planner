@@ -327,7 +327,7 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
           </p>
 
           <h2 className="text-4xl font-bold">
-            {t.weatherFor}{destination}
+            מזג אוויר בפירנצה
           </h2>
 
           <p className="mt-4 max-w-3xl text-xl leading-8 text-slate-600">

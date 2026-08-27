@@ -10,7 +10,7 @@ const highlights = [
     text: "שילוב של חנויות, שווקים, רחובות יפים וזמן חופשי שמתאים גם להורים וגם לנערה בת 13.",
   },
   {
-    title: "אטרקציות למשפחה",
+    title: "חוויות שמתאימות לכל המשפחה",
     text: "בחירה באטרקציות מעניינות ולא עמוסות מדי, עם זמן למנוחה, אוכל ושיטוט רגוע.",
   },
   {
@@ -56,9 +56,7 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 max-w-3xl leading-8 text-slate-300">
-  כלי תכנון ראשוני למשפחה עם שני הורים ונערה בת 13, לטיול סתווי
-  בטוסקנה. המטרה היא לבנות כיוון הגיוני שמשלב ערים היסטוריות,
-  עיירות וכפרים, נופים, אוכל, קניות וזמן חופשי — בלי להעמיס יותר מדי.
+ כלי תכנון משפחתי שבו כל בני המשפחה יכולים להביא את ההעדפות שלהם — ולבנות יחד כיוון טיול אישי לטוסקנה, בקצב ובסגנון שמתאימים להם.
 </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -73,7 +71,7 @@ export default function Home() {
               href="/results"
               className="rounded-full border border-white/20 px-7 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
             >
-              צפייה בהצעת כיוון
+              צפייה בכיוון ראשוני
             </Link>
 
             <Link
@@ -86,7 +84,7 @@ export default function Home() {
         </section>
 
         <section className="mt-10">
-          <h2 className="text-3xl font-bold">מה האפליקציה עוזרת לתכנן?</h2>
+          <h2 className="text-3xl font-bold"> איך האתר עוזר לבנות טיול שמתאים למשפחה?</h2>
 
           <div className="mt-5 grid gap-5 md:grid-cols-2">
             {highlights.map((item) => (
@@ -174,7 +172,7 @@ export default function Home() {
               href="/results"
               className="rounded-full border border-white/20 px-7 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
             >
-              צפייה בהצעת כיוון
+             צפייה בכיוון ראשוני
             </Link>
           </div>
         </section>

@@ -612,7 +612,7 @@ const lodgingTypeItineraryNote =
           </p>
 
           <h1 className="mt-4 text-4xl font-bold">
-          זהו מסלול ראשוני לדוגמה למשפחה עם שני הורים ונערה בת 13. הוא מתאים בעיקר לטיול של 8–10 ימים. בטיול קצר יותר צריך לבחור רק חלק מהאזורים ולא לנסות להספיק הכול. המסלול אינו מחליף בדיקה אמיתית של תאריכים, זמני נסיעה, חניה, מזג אוויר, מחירים ושעות פתיחה, אבל הוא נותן מבנה הגיוני להמשך התכנון.
+         מסלול ראשוני לדוגמה לטיול משפחתי בטוסקנה
           </h1>
 
                   </section>
@@ -698,7 +698,7 @@ const lodgingTypeItineraryNote =
   </p>
 </div>
   <div className="mt-5 grid gap-4 md:grid-cols-2">
-    <AnswerCard label="אורך הטיול" value={answers.tripLength} />
+    <AnswerCard label="משך הטיול" value={answers.tripLength} />
 
 <AnswerCard
   label="תאריך התחלה"
