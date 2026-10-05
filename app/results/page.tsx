@@ -1,49 +1,9 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "tuscanyAutumnAnswers";
+import { useAnswers } from "@/lib/use-answers";
 
-type Answers = {
-  tripLength: string;
-  tripStartDate: string;
-tripEndDate: string;
-arrivalPoint: string;
-departurePoint: string;
-  travelStyle: string;
-  transportation: string;
-  scenicInterest: string;
-  scenicOption: string;
-  baseArea: string;
-  lodgingType: string;
-  lodgingBudget: string;
-  roomSetup: string;
-  lodgingPriorities?: string[];
-
- 
-  teenPriorities?: string[];
-  teenPriority?: string;
-};
-
-const defaultAnswers: Answers = {
-  tripLength: "",
-  tripStartDate: "",
-tripEndDate: "",
-arrivalPoint: "",
-departurePoint: "",
-  travelStyle: "",
-  transportation:"",
-  scenicInterest: "",
-  scenicOption: "",
-  baseArea: "",
-  lodgingType: "",
-  lodgingBudget: "",
- roomSetup: "", 
-lodgingPriorities: [],
-  teenPriorities: [],
-  teenPriority: "",
-};
 
 const tripLengthIdeas = [
   {
@@ -116,31 +76,7 @@ const familyRules = [
 ];
 
 export default function ResultsPage() {
-  const [answers, setAnswers] = useState<Answers>(defaultAnswers);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-
-    if (!stored) {
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(stored);
-
-      setAnswers({
-        ...defaultAnswers,
-        ...parsed,
-        teenPriorities: Array.isArray(parsed.teenPriorities)
-          ? parsed.teenPriorities
-          : parsed.teenPriority
-            ? [parsed.teenPriority]
-            : [],
-      });
-    } catch {
-      setAnswers(defaultAnswers);
-    }
-  }, []);
+  const { answers } = useAnswers();
 
   const teenText =
     answers.teenPriorities && answers.teenPriorities.length > 0

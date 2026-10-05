@@ -1,47 +1,10 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-const STORAGE_KEY = "tuscanyAutumnAnswers";
+import { useAnswers } from "@/lib/use-answers";
 
-type Answers = {
-  tripLength: string;
-  tripStartDate: string;
-tripEndDate: string;
-arrivalPoint: string;
-departurePoint: string;
-  transportation: string;
-  travelStyle: string;
-  scenicInterest: string;
-  scenicOption: string;
-  baseArea: string;
-  lodgingType: string;
-  lodgingBudget: string;
-  roomSetup: string;
-  lodgingPriorities?: string[];
-  teenPriorities?: string[];
-  teenPriority?: string;
-};
-
-const defaultAnswers: Answers = {
-  tripLength: "",
-  tripStartDate: "",
-tripEndDate: "",
-arrivalPoint: "",
-departurePoint: "",
-  transportation: "",
-  travelStyle: "",
-  scenicInterest: "",
-  scenicOption: "",
-  baseArea: "",
-  lodgingType: "",
-  lodgingBudget: "",
-  roomSetup: "",
-lodgingPriorities: [],
-  teenPriorities: [],
-  teenPriority: "",
-};
 
 const plannerRules = [
   "לשאול שאלות לפני בניית מסלול סופי.",
@@ -54,31 +17,7 @@ const plannerRules = [
   "לבדוק שעות פתיחה, זמני נסיעה, חניה, מזג אוויר ועלויות לפני הזמנה.",
 ];
 export default function PromptPage() {
-  const [answers, setAnswers] = useState<Answers>(defaultAnswers);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-
-    if (!stored) {
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(stored);
-
-      setAnswers({
-        ...defaultAnswers,
-        ...parsed,
-        teenPriorities: Array.isArray(parsed.teenPriorities)
-          ? parsed.teenPriorities
-          : parsed.teenPriority
-            ? [parsed.teenPriority]
-            : [],
-      });
-    } catch {
-      setAnswers(defaultAnswers);
-    }
-  }, []);
+  const { answers } = useAnswers();
 
   const teenText =
     answers.teenPriorities && answers.teenPriorities.length > 0
@@ -177,7 +116,7 @@ Only after that, suggest a realistic day-by-day itinerary.`;
 
 <p className="mt-5 max-w-3xl leading-8 text-slate-300">
   העמוד הזה מכין הנחיה מסודרת לפי התשובות שנשמרו. אפשר להשתמש בה כדי
-  לקבל מסלול מפורט יותר, ולאחר מכן להמשיך למסלול לדוגמה בתוך האתר.
+  לקבל מסלול אישי בצ׳אט: העתיקו את ההנחיה והדביקו אותה בכלי התכנון שבו תשתמשו. המסלול באתר נשאר דוגמה ואינו מתעדכן מתשובת הצ׳אט.
 </p>
         </section>
 
@@ -248,7 +187,7 @@ Only after that, suggest a realistic day-by-day itinerary.`;
               href="/itinerary"
               className="rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-slate-950 hover:bg-amber-200"
             >
-              המשך למסלול לדוגמה
+              צפייה במסלול לדוגמה
             </Link>
 
             <Link

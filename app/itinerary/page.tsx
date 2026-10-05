@@ -1,47 +1,10 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "tuscanyAutumnAnswers";
+import { useAnswers } from "@/lib/use-answers";
+import { dateWarning, itineraryDays } from "@/lib/answers";
 
-type Answers = {
-  tripLength: string;
-  tripStartDate: string;
-tripEndDate: string;
-arrivalPoint: string;
-departurePoint: string;
-  transportation: string;
-  travelStyle: string;
-  scenicInterest: string;
-  scenicOption: string;
-  baseArea: string;
-  lodgingType: string;
-  lodgingBudget: string;
-  roomSetup: string;
-lodgingPriorities?: string[];
-  teenPriorities?: string[];
-  teenPriority?: string;
-};
-
-const defaultAnswers: Answers = {
-  tripLength: "",
-  tripStartDate: "",
-tripEndDate: "",
-arrivalPoint: "",
-departurePoint: "",
-  travelStyle: "",
-  transportation: "",
-  scenicInterest: "",
-  scenicOption: "",
-  baseArea: "",
-  lodgingType: "",
-  lodgingBudget: "",
-  roomSetup: "",
-lodgingPriorities: [],
-  teenPriorities: [],
-  teenPriority: "",
-};
 
 const partialCarItinerary = [
   {
@@ -87,7 +50,7 @@ const partialCarItinerary = [
   {
     day: "יום 9",
     title: "לוקה ופיזה או חזרה לפירנצה",
-    text: "אפשר לבחור יום קל יחסית בלוקה ופיזה, או לחזור לפירנצה לזמן חופשי, קניות, אוכל ושיטוט אחרון.",
+    text: "עדיף לחזור לפירנצה לזמן חופשי, אוכל ושיטוט אחרון. לוקה או פיזה מתאימות רק אם הן משתלבות באזור הלינה הבא או בנקודת היציאה; מעבר מוואל ד'אורצ'ה לצפון־מערב טוסקנה הוא יום נסיעה משמעותי.",
   },
   {
     day: "יום 10",
@@ -217,32 +180,7 @@ const publicTransportChecks = [
   "לבדוק שעות פתיחה, הזמנות, מחירי כניסה וימי סגירה.",
 ];
 export default function ItineraryPage() {
-  const [answers, setAnswers] = useState<Answers>(defaultAnswers);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-
-    if (!stored) {
-     
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(stored);
-
-      setAnswers({
-        ...defaultAnswers,
-        ...parsed,
-        teenPriorities: Array.isArray(parsed.teenPriorities)
-          ? parsed.teenPriorities
-          : parsed.teenPriority
-            ? [parsed.teenPriority]
-            : [],
-      });
-    } catch {
-      setAnswers(defaultAnswers);
-    }
-  }, []);
+  const { answers } = useAnswers();
 
   const teenText =
     answers.teenPriorities && answers.teenPriorities.length > 0
@@ -328,17 +266,10 @@ const undecidedTransportationItinerary = [
       : normalizedTransportation === "רכב שכור רק לחלק הכפרי"
         ? partialCarItinerary
         : undecidedTransportationItinerary;
-const tripDaysFromDates =
-  answers.tripStartDate && answers.tripEndDate
-    ? Math.floor(
-        (new Date(answers.tripEndDate).getTime() -
-          new Date(answers.tripStartDate).getTime()) /
-          (1000 * 60 * 60 * 24)
-      ) + 1
-    : selectedItinerary.length;
+const tripDaysFromDates = itineraryDays(answers);
 
 const visibleItinerary = [
-  ...selectedItinerary.slice(0, Math.max(tripDaysFromDates - 1, 1)),
+  ...selectedItinerary.slice(0, tripDaysFromDates - 1),
   {
     day: `יום ${tripDaysFromDates}`,
     title: "סיום הטיול וחזרה הביתה",
@@ -614,12 +545,14 @@ const lodgingTypeItineraryNote =
           <h1 className="mt-4 text-4xl font-bold">
          מסלול ראשוני לדוגמה לטיול משפחתי בטוסקנה
           </h1>
+          <p className="mt-4 leading-8 text-slate-300">הדוגמה מותאמת לאופן התחבורה ולמשך הטיול. בלי תאריכים, מוצג הקצה העליון של טווח הימים שנבחר. סדר היעדים ובסיסי הלינה עדיין דורשים התאמה לאזור הלינה, לנקודות ההגעה והיציאה ולקצב המשפחה. אין צורך לבקר בכל המקומות המוזכרים.</p>
+          {dateWarning(answers) && <p role="alert" className="mt-4 text-amber-200">{dateWarning(answers)}</p>}
 
                   </section>
 
  <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
   <h2 className="text-2xl font-bold">
-    התשובות שעליהן המסלול מבוסס
+    הבחירות שלכם להמשך התכנון
   </h2>
 
   <div className="mt-6 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-5">
@@ -649,6 +582,10 @@ const lodgingTypeItineraryNote =
   <p className="mt-2 leading-7 text-slate-300">
     {baseAreaItineraryNote}
   </p>
+</div>
+<div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+  <h3 className="font-bold text-amber-200">התאמת סוג מקום הלינה</h3>
+  <p className="mt-2 leading-7 text-slate-300">{lodgingTypeItineraryNote}</p>
 </div>
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
   <h3 className="font-bold text-amber-200">

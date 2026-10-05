@@ -1,23 +1,18 @@
-﻿"use client";
+"use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 
 
-type SearchAnswers = {
-  destination: string;
-  travelDates?: string;
-  tripLength: string;
-  travelers: string;
-};
-
-
+import { useAnswers } from "@/lib/use-answers";
+import { cityForBase, weatherCities } from "@/lib/weather";
 
 type DailyForecast = {
   date: string;
   max: number;
   min: number;
-  rainChance: number;
+  rainChance: number | null;
 };
 
 const ui = {
@@ -199,21 +194,12 @@ const ui = {
 
 
 
-const defaultSearch: SearchAnswers = {
-  destination: "Florence",
-  travelDates: "",
-  tripLength: "",
-  travelers: "Two parents and one 13-year-old daughter",
-};
-
-
-
-
-
 export default function WeatherPage() {
- 
-  const [search, setSearch] = useState<SearchAnswers>(defaultSearch);
-  
+  const { answers, ready } = useAnswers();
+  const [manualCity, setManualCity] = useState("");
+  const destination = manualCity || cityForBase(answers.baseArea);
+  const cityLabel = weatherCities.find(city => city.name === destination)?.label || destination;
+  const travelDates = [answers.tripStartDate, answers.tripEndDate].filter(Boolean).join(" עד ");
 
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [feelsLike, setFeelsLike] = useState<number | null>(null);
@@ -223,29 +209,34 @@ export default function WeatherPage() {
 
   
   useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
     async function loadWeather() {
       try {
-        const destination = search.destination || "Florence";
 
         setWeatherStatus("loadingLocation");
         setCurrentTemp(null);
         setFeelsLike(null);
         setDailyForecast([]);
+        setMatchedLocation("");
 
         const geoResponse = await fetch(
           `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
             destination
-          )}&count=1&language=en&format=json`
+          )}&count=10&language=en&format=json`, options
         );
+        if (!geoResponse.ok) throw Error("Location request failed");
 
         const geoData = await geoResponse.json();
 
-        if (!geoData.results || geoData.results.length === 0) {
+        if (!Array.isArray(geoData.results) || !geoData.results.some((place: { country_code: string }) => place.country_code === "IT")) {
           setWeatherStatus("noLocation");
           return;
         }
 
-        const place = geoData.results[0];
+        const place = geoData.results.find((place: { country_code: string }) => place.country_code === "IT");
+        if (controller.signal.aborted) return;
 
         setMatchedLocation(
           `${place.name}${place.country ? ", " + place.country : ""}`
@@ -254,10 +245,13 @@ export default function WeatherPage() {
         setWeatherStatus("loadingTemps");
 
         const forecastResponse = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,apparent_temperature&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=7&timezone=auto`
+          `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,apparent_temperature&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=7&timezone=auto`, options
         );
+        if (!forecastResponse.ok) throw Error("Forecast request failed");
 
         const forecastData = await forecastResponse.json();
+        if (controller.signal.aborted) return;
+        if (!Array.isArray(forecastData.daily?.time)) throw Error("Invalid forecast");
 
         setCurrentTemp(forecastData.current?.temperature_2m ?? null);
         setFeelsLike(forecastData.current?.apparent_temperature ?? null);
@@ -268,25 +262,26 @@ export default function WeatherPage() {
             max: forecastData.daily.temperature_2m_max[index],
             min: forecastData.daily.temperature_2m_min[index],
             rainChance:
-              forecastData.daily.precipitation_probability_max?.[index] ?? 0,
+              forecastData.daily.precipitation_probability_max?.[index] ?? null,
           })
         );
 
         setDailyForecast(days);
         setWeatherStatus("loaded");
       } catch {
+        if (controller.signal.aborted) return;
         setWeatherStatus("failed");
       }
     }
 
     loadWeather();
-  }, [search.destination]);
+    return () => controller.abort();
+  }, [destination, ready]);
 
   
     
   const t = ui.he;
 const isHebrew = true;
-  const destination = search.destination || "Florence";
   const statusText =
     weatherStatus === "loadingLocation"
       ? t.loadingLocation
@@ -313,12 +308,12 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
             <h1 className="text-4xl font-bold">{t.title}</h1>
           </div>
 
-          <a
+          <Link
             href="/itinerary"
             className="rounded-2xl border border-white/10 bg-slate-900/80 px-5 py-3 text-center text-lg font-semibold text-amber-300 hover:border-amber-300"
           >
             {t.back}
-          </a>
+          </Link>
         </header>
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/80 p-8">
@@ -327,10 +322,19 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
           </p>
 
           <h2 className="text-4xl font-bold">
-            מזג אוויר בפירנצה
+            מזג אוויר ב{cityLabel}
           </h2>
 
-          <p className="mt-4 max-w-3xl text-xl leading-8 text-slate-600">
+          <label className="mt-5 block text-slate-200">
+            יעד לבדיקת התחזית
+            <select value={destination} onChange={event => setManualCity(event.target.value)} disabled={!ready}
+              className="mr-3 rounded-xl border border-white/20 bg-slate-950 p-3 text-white">
+              {weatherCities.map(city => <option key={city.name} value={city.name}>{city.label}</option>)}
+            </select>
+          </label>
+          <p className="mt-3 text-slate-300">היעד הראשוני נבחר לפי אזור הלינה. באזור כפרי זו תחזית לעיר סמוכה; באזור משולב התחילו בפירנצה ובחרו את היעד הרצוי. התחזית היא לשבוע הקרוב, ולא לתאריכי טיול רחוקים.</p>
+
+          <p className="mt-4 max-w-3xl text-xl leading-8 text-slate-300">
             {t.description}
           </p>
 
@@ -339,7 +343,7 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
           </p>
 
           {matchedLocation && (
-            <p className="mt-3 text-lg text-slate-600">
+            <p className="mt-3 text-lg text-slate-300">
               {t.locationFound}: {matchedLocation}
             </p>
           )}
@@ -353,20 +357,20 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
-              <p className="text-sm font-semibold text-slate-500">{t.feelsLike}</p>
+              <p className="text-sm font-semibold text-slate-300">{t.feelsLike}</p>
               <p className="mt-2 text-4xl font-bold">
                 {feelsLike === null ? "..." : `${Math.round(feelsLike)}°C`}
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
-              <p className="text-sm font-semibold text-slate-500">{t.travelDates}</p>
-              <p className="mt-2 text-xl font-bold">{search.travelDates || t.notSelected}</p>
+              <p className="text-sm font-semibold text-slate-300">{t.travelDates}</p>
+              <p className="mt-2 text-xl font-bold">{travelDates || t.notSelected}</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
-              <p className="text-sm font-semibold text-slate-500">{t.tripLength}</p>
-              <p className="mt-2 text-xl font-bold">  {search.tripLength || t.notSelected}</p>
+              <p className="text-sm font-semibold text-slate-300">{t.tripLength}</p>
+              <p className="mt-2 text-xl font-bold">  {answers.tripLength || t.notSelected}</p>
             </div>
 
             
@@ -382,7 +386,7 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
                 <p className="text-lg font-bold">{day.date}</p>
                 <p className="mt-2 text-lg">{t.max}: {Math.round(day.max)}°C</p>
                 <p className="text-lg">{t.min}: {Math.round(day.min)}°C</p>
-                <p className="text-lg">{t.rainChance}: {day.rainChance}%</p>
+                <p className="text-lg">{t.rainChance}: {day.rainChance === null ? "לא זמין" : `${day.rainChance}%`}</p>
               </div>
             ))}
           </div>
@@ -423,21 +427,21 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
               <h3 className="text-xl font-bold">{t.tourCheck}</h3>
-              <p className="mt-2 text-lg leading-7 text-slate-600">
+              <p className="mt-2 text-lg leading-7 text-slate-300">
                 {t.checkTexts.tour} 
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
               <h3 className="text-xl font-bold">{t.mapsCheck}</h3>
-              <p className="mt-2 text-lg leading-7 text-slate-600">
+              <p className="mt-2 text-lg leading-7 text-slate-300">
                 {t.checkTexts.maps}
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
               <h3 className="text-xl font-bold">{t.taxiCheck}</h3>
-              <p className="mt-2 text-lg leading-7 text-slate-600">
+              <p className="mt-2 text-lg leading-7 text-slate-300">
                 {t.checkTexts.taxi}
               </p>
             </div>
@@ -445,19 +449,19 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
         </section>
 
         <div className={`mt-8 flex flex-col gap-4 ${isHebrew ? "sm:flex-row-reverse" : "sm:flex-row"}`}>
-          <a
+          <Link
             href="/itinerary"
             className="rounded-2xl bg-blue-700 px-8 py-4 text-center text-xl font-semibold text-white hover:bg-blue-800"
           >
             {t.backItinerary}
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/"
             className="rounded-2xl border border-white/10 bg-amber-300 px-8 py-4 text-center text-xl font-semibold text-slate-950 hover:bg-amber-200"
           >
             {t.backHome}
-          </a>
+          </Link>
         </div>
       </div>
     </main>

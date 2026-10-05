@@ -1,47 +1,10 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "tuscanyAutumnAnswers";
+import { useAnswers } from "@/lib/use-answers";
+import { dateWarning, type Answers } from "@/lib/answers";
 
-type Answers = {
-  tripLength: string;
-  tripStartDate: string;
-tripEndDate: string;
-arrivalPoint: string;
-departurePoint: string;
-  travelStyle: string;
-  transportation: string;
-  scenicInterest: string;
-  scenicOption: string;
-  baseArea: string;
-  lodgingType: string;
-  lodgingBudget: string;
-  roomSetup: string;
-  lodgingPriorities: string[];
-  teenPriorities: string[];
-  teenPriority: string;  
-};
-
-const defaultAnswers: Answers = {
-  tripLength: "",
-  tripStartDate: "",
-tripEndDate: "",
-arrivalPoint: "",
-departurePoint: "",
-  travelStyle: "",
-  transportation: "",
-  scenicInterest: "",
-  scenicOption: "",
-  baseArea: "",
-  lodgingType: "",
-  lodgingBudget: "",
-  roomSetup: "",
-  lodgingPriorities: [],
-  teenPriorities: [],
-  teenPriority: "",
-};
 
 const questions = [
   {
@@ -180,72 +143,18 @@ const teenOptions = [
 ];
 
 export default function SearchPage() {
-  const [answers, setAnswers] = useState<Answers>(defaultAnswers);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-
-    if (stored) {
-      const parsed = JSON.parse(stored);
-
-      setAnswers({
-        ...defaultAnswers,
-        ...parsed,
-        lodgingPriorities: Array.isArray(parsed.lodgingPriorities)
-  ? parsed.lodgingPriorities
-  : [],
-       
-  teenPriorities: Array.isArray(parsed.teenPriorities)
-          ? parsed.teenPriorities
-          : parsed.teenPriority
-            ? [parsed.teenPriority]
-            : [],
-      });
-    }
-  }, []);
-
-useEffect(() => {
-  if (!answers.tripStartDate || !answers.tripEndDate) {
-    return;
-  }
-
-  const start = new Date(answers.tripStartDate);
-  const end = new Date(answers.tripEndDate);
-
-  const differenceInDays =
-    Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-  let calculatedTripLength = "";
-
-  if (differenceInDays >= 4 && differenceInDays <= 5) {
-    calculatedTripLength = "4–5 ימים";
-  } else if (differenceInDays >= 6 && differenceInDays <= 7) {
-    calculatedTripLength = "6–7 ימים";
-  } else if (differenceInDays >= 8 && differenceInDays <= 10) {
-    calculatedTripLength = "8–10 ימים";
-  }
-
-  if (calculatedTripLength) {
-    setAnswers((current) => ({
-      ...current,
-      tripLength: calculatedTripLength,
-    }));
-  }
-}, [answers.tripStartDate, answers.tripEndDate]);
- 
+  const { answers, ready, status, save, clear } = useAnswers();
 
   function selectAnswer(key: keyof Answers, value: string) {
-    setAnswers((current) => ({
+    save((current) => ({
       ...current,
       [key]: value,
     }));
 
-    setSaved(true);
   }
 
   function toggleTeenPriority(value: string) {
-  setAnswers((current) => {
+  save((current) => {
     const exists = current.teenPriorities.includes(value);
 
     return {
@@ -256,10 +165,9 @@ useEffect(() => {
     };
   });
 
-  setSaved(true);
 }
 function toggleLodgingPriority(value: string) {
-  setAnswers((current) => {
+  save((current) => {
     const exists = current.lodgingPriorities.includes(value);
 
     return {
@@ -270,21 +178,9 @@ function toggleLodgingPriority(value: string) {
     };
   });
 
-  setSaved(true);
 }
-  function clearAnswers() {
-    setAnswers(defaultAnswers);
-    window.localStorage.removeItem(STORAGE_KEY);
-    setSaved(false);
-  }
+  function clearAnswers() { clear(); }
 
-  const hasEnoughAnswers = Boolean(
-    answers.tripLength &&
-      answers.travelStyle &&
-      answers.scenicInterest &&
-      answers.baseArea &&
-      answers.teenPriorities.length > 0
-  );
 const requiredQuestionKeys: Array<keyof Answers> = [
   "tripLength",
   "travelStyle",
@@ -315,7 +211,9 @@ const requiredQuestionKeys: Array<keyof Answers> = [
 </p>
         </section>
 
-        <section className="mt-8 space-y-6">
+        <fieldset disabled={!ready} className="mt-8 space-y-6">
+          {dateWarning(answers) && <p role="alert" className="rounded-2xl bg-amber-300/10 p-4 text-amber-100">{dateWarning(answers)}</p>}
+          <p className="text-slate-300">אם שני התאריכים נבחרו, משך הטיול מחושב לפיהם. אחרת משתמשים בטווח שתבחרו.</p>
           <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
   <h2 className="text-2xl font-bold">מתי מתחיל הטיול?</h2>
 
@@ -328,7 +226,7 @@ const requiredQuestionKeys: Array<keyof Answers> = [
     type="date"
     value={answers.tripStartDate}
     onChange={(event) =>
-      setAnswers((current) => ({
+      save((current) => ({
         ...current,
         tripStartDate: event.target.value,
       }))
@@ -347,7 +245,7 @@ const requiredQuestionKeys: Array<keyof Answers> = [
     type="date"
     value={answers.tripEndDate}
     onChange={(event) =>
-      setAnswers((current) => ({
+      save((current) => ({
         ...current,
         tripEndDate: event.target.value,
       }))
@@ -366,7 +264,7 @@ const requiredQuestionKeys: Array<keyof Answers> = [
     type="text"
     value={answers.arrivalPoint}
     onChange={(event) =>
-      setAnswers((current) => ({
+      save((current) => ({
         ...current,
         arrivalPoint: event.target.value,
       }))
@@ -387,7 +285,7 @@ const requiredQuestionKeys: Array<keyof Answers> = [
     type="text"
     value={answers.departurePoint}
     onChange={(event) =>
-      setAnswers((current) => ({
+      save((current) => ({
         ...current,
         departurePoint: event.target.value,
       }))
@@ -428,6 +326,7 @@ const isSelected = isLodgingPriorities
                       <button
                         key={option}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() =>
   isLodgingPriorities
     ? toggleLodgingPriority(option)
@@ -469,6 +368,7 @@ const isSelected = isLodgingPriorities
                   <button
                     key={option}
                     type="button"
+                    aria-pressed={isSelected}
                     onClick={() => toggleTeenPriority(option)}
                     className={`rounded-2xl border p-4 text-right leading-7 transition ${
                       isSelected
@@ -476,14 +376,14 @@ const isSelected = isLodgingPriorities
                         : "border-white/10 bg-white/5 text-slate-100 hover:border-amber-300/70"
                     }`}
                   >
-                    {isSelected ? "? " : ""}
+                    {isSelected ? "✓ " : ""}
                     {option}
                   </button>
                 );
               })}
             </div>
           </div>
-        </section>
+        </fieldset>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -491,11 +391,10 @@ const isSelected = isLodgingPriorities
               <h2 className="text-2xl font-bold">התשובות נשמרות בדפדפן</h2>
 
               <p className="mt-2 text-slate-300">
-                {hasEnoughAnswers
-  ? "התשובות מספיקות. אפשר להמשיך לכיוון ראשוני."
-  : saved
-    ? "התשובות נשמרו, אבל עדיין חסרות תשובות כמה תשובות חשובות להמשךך."
-    : "בחרו תשובות ואז המשיכו לכיוון ראשוני."}
+                {status === "error"
+                  ? "לא ניתן לשמור בדפדפן כרגע. אפשר להמשיך, אך התשובות עלולות לא להישמר לאחר מעבר עמוד או רענון."
+                  : status === "saved" ? "התשובות נשמרו. אפשר להמשיך גם עם בחירות שעדיין פתוחות."
+                  : "אפשר לבחור תשובות עכשיו או להשאיר החלטות להמשך."}
               </p>
             </div>
 
@@ -503,51 +402,20 @@ const isSelected = isLodgingPriorities
               <button
                 type="button"
                 onClick={clearAnswers}
+                disabled={!ready}
                 className="rounded-full border border-white/20 px-6 py-3 font-semibold text-slate-100 hover:border-amber-300"
               >
                 מחיקת תשובות
               </button>
 
               <Link
-  href="/results"
-  aria-disabled={!hasEnoughAnswers}
-  tabIndex={hasEnoughAnswers ? 0 : -1}
-  onClick={(event) => {
-    if (!hasEnoughAnswers) {
-      event.preventDefault();
-      return;
-    }
-
-    const teenPriority = answers.teenPriorities.join(", ");
-
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...answers, teenPriority })
-    );
-  }}
-  className={`rounded-full px-6 py-3 text-center font-bold ${
-    hasEnoughAnswers
-      ? "bg-amber-300 text-slate-950 hover:bg-amber-200"
-      : "cursor-not-allowed bg-slate-700 text-slate-300"
-  }`}
->
- המשך לכיוון ראשוני
-</Link>
+                href="/results"
+                className="rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-slate-950 hover:bg-amber-200"
+              >המשך לכיוון ראשוני</Link>
             </div>
           </div>
 
-          {!hasEnoughAnswers && (
-  <div className="mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4 text-amber-100">
-    <p className="font-semibold">
-      כדי להמשיך לכיוון ראשוני, עדיין חסרות כמה תשובות חשובות להמשך.
-    </p>
 
-    <p className="mt-2 leading-7">
-      ודאו שבחרתם: משך הטיול, קצב הטיול, חשיבות הנופים והטבע, אזור לינה,
-      ולפחות אפשרות אחת עבור מה חשוב לנערה בת 13.
-    </p>
-  </div>
-)}
         </section>
       </div>
     </main>
