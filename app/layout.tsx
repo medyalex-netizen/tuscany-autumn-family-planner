@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
 import "./globals.css";
-
-export const metadata: Metadata = {
-  title: "Tuscany Autumn Family Planner",
-  description:
-    "Interactive autumn family trip planner for TuscInteractive autumn family trip planner for Tuscany..",
-};
+import { LanguageProvider } from "../language-context";
 
 export default function RootLayout({
   children,
@@ -13,8 +7,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="he" dir="rtl">
+      <body>
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

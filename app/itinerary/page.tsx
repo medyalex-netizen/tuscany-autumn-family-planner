@@ -1,8 +1,11 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 
 import { useAnswers } from "@/lib/use-answers";
+import { useLanguage } from "../../language-context";
+import { displayAnswer, displayAnswerList, displayText } from "../../display-text";
+import { translations } from "../../translations";
 import { dateWarning, itineraryDays } from "@/lib/answers";
 
 
@@ -15,7 +18,7 @@ const partialCarItinerary = [
   {
     day: "יום 2",
     title: "פירנצה — מרכז היסטורי, קניות ואוכל",
-    text: "יום עירוני נוח עם הרחובות המרכזיים, כיכרות יפות, גלידה, בתי קפה, זמן חופשי וקניות שמתאימות גם לנערה בת 13.",
+    text: "יום עירוני נוח עם הרחובות המרכזיים, כיכרות יפות, גלידה, בתי קפה, זמן חופשי וקניות שמתאימות גם למתבגר/ת.",
   },
   {
     day: "יום 3",
@@ -144,7 +147,7 @@ const publicTransportItinerary = [
   {
     day: "יום 7",
     title: "יום גמיש בפירנצה",
-    text: "יום שמיועד לקניות, אוכל, מנוחה, שוק מקומי, פעילות שמתאימה לנערה בת 13 או שינוי תוכנית במקרה של גשם.",
+    text: "יום שמיועד לקניות, אוכל, מנוחה, שוק מקומי, פעילות שמתאימה למתבגר/ת או שינוי תוכנית במקרה של גשם.",
   },
   {
     day: "יום 8",
@@ -181,12 +184,13 @@ const publicTransportChecks = [
 ];
 export default function ItineraryPage() {
   const { answers } = useAnswers();
+  const { language } = useLanguage();
+  const t = translations[language];
+  const warning = dateWarning(answers);
+  const d = (value?: string | null) => displayText(value, language);
 
-  const teenText =
-    answers.teenPriorities && answers.teenPriorities.length > 0
-      ? answers.teenPriorities.join(", ")
-      : answers.teenPriority || "עדיין לא נבחר";
-      const transportationNote =
+  const teenText = displayAnswerList(answers.teenPriorities.length ? answers.teenPriorities : [answers.teenPriority].filter(Boolean), language);
+const transportationNote =
   answers.transportation === "רכב שכור לכל הטיול"
     ? "המסלול יכול לכלול יותר אזורים כפריים, עיירות קטנות ונסיעות נופיות. חשוב לבדוק חניה, אזורי ZTL והחזרת הרכב."
     : answers.transportation === "רכב שכור רק לחלק הכפרי"
@@ -284,7 +288,7 @@ const visibleItinerary = [
   "לבדוק שעות פתיחה, הזמנות, מחירי כניסה וימי סגירה.",
   "להשאיר אפשרות לשנות את סדר הימים לפי מזג האוויר ועייפות המשפחה.",
 ];
-const selectedChecks =
+ const selectedChecks =
   normalizedTransportation === "רכבות ותחבורה ציבורית בלבד"
     ? publicTransportChecks
     : normalizedTransportation === "רכב שכור לכל הטיול" ||
@@ -319,7 +323,7 @@ const teenDayTwoNote = (() => {
     additions.push("לשלב עצירה לגלידה, בית קפה או טעימה מקומית");
   }
 
-  return additions.length > 0 ? additions.join(". ") + "." : "";
+  return additions.length > 0 ? additions.map(d).join(". ") + "." : "";
 })();
 const teenVillageDayNote = (() => {
   const priorities =
@@ -392,7 +396,7 @@ const teenComfortNote = (() => {
     );
   }
 
-  return additions.length > 0 ? additions.join(". ") + "." : "";
+  return additions.length > 0 ? additions.map(d).join(". ") + "." : "";
 })();
 const paceDayNote =
   answers.travelStyle === "רגוע — מעט מקומות והרבה זמן חופשי"
@@ -418,7 +422,7 @@ const paceDayNote =
       : answers.scenicOption === "אזורי כרמים ואוכל מקומי"
         ? "כדאי לשלב אזור כרמים, טעימות או ארוחה מקומית שמתאימה למשפחה, ולבדוק מראש שעות פתיחה והזמנות."
         : answers.scenicOption === "טבע פתוח ותצפיות"
-          ? "כדאי לשלב טבע פתוח, תצפיות ומסלולים קצרים שמתאימים גם לבת ה־13."
+          ? "כדאי לשלב טבע פתוח, תצפיות ומסלולים קצרים שמתאימים גם למתבגר/ת."
           : "כדאי להשאיר את היום הנופי גמיש ולבחור לפי מזג האוויר והמסלול.";
   const baseAreaItineraryNote =
   answers.baseArea === "פירנצה"
@@ -457,14 +461,14 @@ const lodgingTypeItineraryNote =
             ? "אם התקציב גמיש, כדאי להשוות בכל אזור בין המחיר לבין המיקום, החניה, גודל החדר והשירותים שמקבלים בפועל."
             : "אם תקציב הלינה עדיין לא הוחלט, כדאי לקבוע טווח מחיר ללילה לפני שמתחילים להזמין מקומות לינה.";
           const roomSetupItineraryNote =
-  answers.roomSetup === "חדר אחד עם מיטה זוגית ומיטה נפרדת לנערה"
-    ? "מומלץ לוודא שבכל מקום לינה החדר כולל מיטה זוגית ומיטה נפרדת אמיתית ונוחה לנערה, ולא רק מיטה מתקפלת קטנה."
+  answers.roomSetup === "חדר אחד עם מיטה זוגית ומיטה נפרדת למתבגר/ת"
+    ? "מומלץ לוודא שבכל מקום לינה החדר כולל מיטה זוגית ומיטה נפרדת אמיתית ונוחה למתבגר/ת, ולא רק מיטה מתקפלת קטנה."
     : answers.roomSetup === "חדר משפחתי לשלושה"
       ? "מומלץ לבחור חדר משפחתי שמיועד בפועל לשלושה אורחים, עם מספיק מקום למזוודות ואחסון."
       : answers.roomSetup === "שני חדרים נפרדים"
         ? "אם בוחרים שני חדרים נפרדים, כדאי לבקש מראש חדרים סמוכים או מחוברים ולוודא שהסידור מתאים למשפחה."
         : answers.roomSetup === "דירה עם חדר שינה וספה נפתחת"
-          ? "בדירה עם חדר שינה וספה נפתחת, כדאי לבדוק שהספה מתאימה לשינה נוחה לנערה בת 13 ושיש מספיק מרחב ופרטיות."
+          ? "בדירה עם חדר שינה וספה נפתחת, כדאי לבדוק שהספה מתאימה לשינה נוחה למתבגר/ת ושיש מספיק מרחב ופרטיות."
           : answers.roomSetup === "גמישים לפי המקום"
             ? "אם אתם גמישים בסידור החדר, כדאי להשוות בכל מקום בין סוג המיטה הנוספת, גודל החדר, הפרטיות והמחיר."
             : "אם סידור החדר עדיין לא הוחלט, כדאי להגדיר מראש מה נחשב סידור שינה נוח לשלושת בני המשפחה.";
@@ -481,7 +485,7 @@ const lodgingTypeItineraryNote =
   }
 
   if (priorities.includes("חדר משפחתי")) {
-    parts.push("לוודא שהחדר מתאים בנוחות לשני הורים ולנערה בת 13");
+    parts.push("לוודא שהחדר מתאים בנוחות לשני הורים ולמתבגר/ת");
   }
 
   if (priorities.includes("מטבחון")) {
@@ -497,119 +501,93 @@ const lodgingTypeItineraryNote =
   }
 
   return parts.length > 0
-    ? parts.join(". ") + "."
-    : "כדאי לבחור את מקום הלינה לפי הדברים שהכי חשובים לנוחות המשפחה.";
+    ? parts.map(d).join(". ") + "."
+    : d("כדאי לבחור את מקום הלינה לפי הדברים שהכי חשובים לנוחות המשפחה.");
 })();
           return (
     
    
-   <main dir="rtl" className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+   <main dir={language === "he" ? "rtl" : "ltr"} className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 flex flex-wrap gap-4">
-          <Link href="/" className="text-sm text-amber-300 hover:text-amber-200">
-            חזרה לדף הבית
-          </Link>
+          <Link href="/" className="text-sm text-amber-300 hover:text-amber-200">{t.backHome}</Link>
 <Link
   href="/weather"
   className="text-sm text-amber-300 hover:text-amber-200"
->
-  מזג אוויר
-</Link>
+>{t.weather}</Link>
           <Link
             href="/search"
             className="text-sm text-amber-300 hover:text-amber-200"
-          >
-            שינוי תשובות
-          </Link>
+          >{t.changeAnswers}</Link>
 
           <Link
             href="/results"
             className="text-sm text-amber-300 hover:text-amber-200"
-          >
-            חזרה להצעת הכיוון
-          </Link>
+          >{t.backToResults}</Link>
 
           <Link
             href="/prompt"
             className="text-sm text-amber-300 hover:text-amber-200"
-          >
-            חזרה להנחיית התכנון
-          </Link>
+          >{t.backToPrompt}</Link>
         </div>
 
         <section className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
-          <p dir="ltr" className="text-right text-sm font-semibold text-amber-300">
-            Tuscany Autumn Family Planner
-          </p>
+          <p className="text-sm font-semibold text-amber-300">{t.appName}</p>
 
-          <h1 className="mt-4 text-4xl font-bold">
-         מסלול ראשוני לדוגמה לטיול משפחתי בטוסקנה
-          </h1>
-          <p className="mt-4 leading-8 text-slate-300">הדוגמה מותאמת לאופן התחבורה ולמשך הטיול. בלי תאריכים, מוצג הקצה העליון של טווח הימים שנבחר. סדר היעדים ובסיסי הלינה עדיין דורשים התאמה לאזור הלינה, לנקודות ההגעה והיציאה ולקצב המשפחה. אין צורך לבקר בכל המקומות המוזכרים.</p>
-          {dateWarning(answers) && <p role="alert" className="mt-4 text-amber-200">{dateWarning(answers)}</p>}
+          <h1 className="mt-4 text-4xl font-bold">{t.itineraryTitle}</h1>
+          <p className="mt-4 leading-8 text-slate-300">
+    {t.itineraryIntro}
+  </p>
+          {warning && <p role="alert" className="mt-4 text-amber-200">{d(warning)}</p>}
 
                   </section>
 
  <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-  <h2 className="text-2xl font-bold">
-    הבחירות שלכם להמשך התכנון
-  </h2>
+  <h2 className="text-2xl font-bold">{t.itineraryChoices}</h2>
 
   <div className="mt-6 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-5">
-    <h3 className="font-bold text-amber-200">
-      המלצת תחבורה
-    </h3>
+    <h3 className="font-bold text-amber-200">{t.transportationRecommendation}</h3>
 
     <p className="mt-2 leading-7 text-slate-200">
-      {transportationNote}
+      {d(transportationNote)}
     </p>
   </div>
 
   <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-    <h3 className="font-bold">
-      השפעת התחבורה על המסלול
-    </h3>
+    <h3 className="font-bold">{t.transportationImpact}</h3>
 
     <p className="mt-2 leading-7 text-slate-300">
-      {transportationPlan}
+      {d(transportationPlan)}
     </p>
   </div>
   <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">
-    התאמת בסיסי הלינה למסלול
-  </h3>
+  <h3 className="font-bold text-amber-200">{t.itineraryBases}</h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {baseAreaItineraryNote}
+    {d(baseAreaItineraryNote)}
   </p>
 </div>
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">התאמת סוג מקום הלינה</h3>
-  <p className="mt-2 leading-7 text-slate-300">{lodgingTypeItineraryNote}</p>
+  <h3 className="font-bold text-amber-200">{t.lodgingTypeFitTitle}</h3>
+  <p className="mt-2 leading-7 text-slate-300">{d(lodgingTypeItineraryNote)}</p>
 </div>
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">
-    התאמת תקציב הלינה למסלול
-  </h3>
+  <h3 className="font-bold text-amber-200">{t.itineraryBudget}</h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {lodgingBudgetItineraryNote}
+    {d(lodgingBudgetItineraryNote)}
   </p>
 </div>
 
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">
-    התאמת סידור החדר והמיטות למסלול
-  </h3>
+  <h3 className="font-bold text-amber-200">{t.itineraryRoomSetup}</h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {roomSetupItineraryNote}
+    {d(roomSetupItineraryNote)}
   </p>
 </div>
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">
-    מה חשוב לבדוק במקום הלינה במסלול
-  </h3>
+  <h3 className="font-bold text-amber-200">{t.accommodationChecks}</h3>
 
   <p className="mt-2 leading-7 text-slate-300">
     {lodgingPrioritiesItineraryNote}
@@ -617,87 +595,79 @@ const lodgingTypeItineraryNote =
 </div>
   
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">
-    התאמת הנופים למסלול
-  </h3>
+  <h3 className="font-bold text-amber-200">{t.itineraryScenery}</h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {scenicInterestNote}
+    {d(scenicInterestNote)}
   </p>
 </div>
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">
-    סוג היום הנופי המועדף
-  </h3>
+  <h3 className="font-bold text-amber-200">{t.scenicOptionLabel}</h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {scenicOptionNote}
+    {d(scenicOptionNote)}
   </p>
 </div>
   <div className="mt-5 grid gap-4 md:grid-cols-2">
-    <AnswerCard label="משך הטיול" value={answers.tripLength} />
+    <AnswerCard label={t.tripLengthLabel} value={displayAnswer(answers.tripLength, language)} />
 
 <AnswerCard
-  label="תאריך התחלה"
+  label={t.tripStartDateLabel}
   value={answers.tripStartDate}
 />
 
 <AnswerCard
-  label="תאריך סיום"
+  label={t.tripEndDateLabel}
   value={answers.tripEndDate}
 />
    <AnswerCard
-  label="נקודת הגעה"
+  label={t.arrivalPointLabel}
   value={answers.arrivalPoint}
 />
 
 <AnswerCard
-  label="נקודת יציאה או חזרה"
+  label={t.departurePointLabel}
   value={answers.departurePoint}
 />
-    <AnswerCard label="קצב הטיול" value={answers.travelStyle} />
+    <AnswerCard label={t.travelStyleLabel} value={displayAnswer(answers.travelStyle, language)} />
 
     <AnswerCard
-      label="אופן ההתניידות"
-      value={answers.transportation}
+      label={t.transportationLabel}
+      value={displayAnswer(answers.transportation, language)}
     />
 
     <AnswerCard
-      label="עניין בנופים ובטבע"
-      value={answers.scenicInterest}
+      label={t.scenicInterestLabel}
+      value={displayAnswer(answers.scenicInterest, language)}
     />
 
     <AnswerCard
-      label="סוג היום הנופי שמעניין אתכם"
-      value={answers.scenicOption}
+      label={t.scenicOptionLabel}
+      value={displayAnswer(answers.scenicOption, language)}
     />
 
     <AnswerCard
-      label="אזור לינה מועדף"
-      value={answers.baseArea}
+      label={t.baseAreaLabel}
+      value={displayAnswer(answers.baseArea, language)}
     />
 <AnswerCard
-  label="סוג מקום הלינה"
-  value={answers.lodgingType}
+  label={t.lodgingTypeLabel}
+  value={displayAnswer(answers.lodgingType, language)}
 />
 <AnswerCard
-  label="תקציב לינה ללילה"
-  value={answers.lodgingBudget}
+  label={t.lodgingBudgetLabel}
+  value={displayAnswer(answers.lodgingBudget, language)}
 />
 <AnswerCard
-  label="סידור חדר ומיטות"
-  value={answers.roomSetup}
+  label={t.roomSetupLabel}
+  value={displayAnswer(answers.roomSetup, language)}
 />
 <AnswerCard
-  label="מה חשוב במקום הלינה"
-  value={
-    answers.lodgingPriorities && answers.lodgingPriorities.length > 0
-      ? answers.lodgingPriorities.join(", ")
-      : "עדיין לא נבחר"
-  }
+  label={t.lodgingPrioritiesLabel}
+  value={displayAnswerList(answers.lodgingPriorities, language)}
 />
     <AnswerCard
-      label="מה חשוב לנערה בת 13"
+      label={t.teenPrioritiesLabel}
       value={teenText}
     />
   </div>
@@ -705,7 +675,7 @@ const lodgingTypeItineraryNote =
   
 </section>
         <section className="mt-10">
-          <h2 className="text-3xl font-bold">מסלול מוצע לפי ימים</h2>
+          <h2 className="text-3xl font-bold">{t.dayByDayItinerary}</h2>
 
           <div className="mt-5 space-y-5">
      {visibleItinerary.map((item, index) => (
@@ -714,15 +684,15 @@ const lodgingTypeItineraryNote =
     className="rounded-3xl border border-white/10 bg-white/5 p-6"
   >
     <p className="text-sm font-semibold text-amber-300">
-      {item.day}
+      {d(item.day)}
     </p>
 
     <h3 className="mt-2 text-2xl font-bold">
-      {item.title}
+      {d(item.title)}
     </h3>
 
     <p className="mt-3 leading-7 text-slate-300">
-  {item.text}
+  {d(item.text)}
 
   {item.day === "יום 2" && teenDayTwoNote && (
     <span className="mt-2 block text-amber-100">
@@ -733,12 +703,12 @@ const lodgingTypeItineraryNote =
   {(item.day === "יום 6" || item.day === "יום 7") &&
     teenVillageDayNote && (
       <span className="mt-2 block text-amber-100">
-        {teenVillageDayNote}
+        {d(teenVillageDayNote)}
       </span>
     )}
     {item.day === "יום 7" && teenFoodDayNote && (
   <span className="mt-2 block text-amber-100">
-    {teenFoodDayNote}
+    {d(teenFoodDayNote)}
   </span>
 )}
 
@@ -749,7 +719,7 @@ const lodgingTypeItineraryNote =
 )}
 {index === visibleItinerary.length - 1 && paceDayNote && (
   <span className="mt-2 block text-sky-100">
-    {paceDayNote}
+    {d(paceDayNote)}
   </span>
 )}
 </p>
@@ -759,54 +729,42 @@ const lodgingTypeItineraryNote =
         </section>
 
         <section className="mt-10 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-          <h2 className="text-3xl font-bold">בדיקות חובה לפני הזמנה</h2>
+          <h2 className="text-3xl font-bold">{t.bookingChecks}</h2>
 
           <div className="mt-5 space-y-3">
             {selectedChecks.map((check) => (
   <p key={check} className="leading-7 text-slate-300">
-    ✓ {check}
+    ✓ {d(check)}
   </p>
 ))}
           </div>
         </section>
 
         <section className="mt-10 rounded-3xl border border-amber-300/30 bg-amber-300/10 p-6">
-          <h2 className="text-2xl font-bold text-amber-200">
-            מה עושים עכשיו?
-          </h2>
+          <h2 className="text-2xl font-bold text-amber-200">{t.itineraryNextTitle}</h2>
 
           <p className="mt-3 leading-8 text-slate-200">
-            אם המסלול נראה בכיוון נכון, השלב הבא הוא להפוך אותו למסלול אמיתי
-            לפי תאריכים מדויקים, מלונות זמינים, זמני רכבות, תחזית מזג אוויר
-            ושעות פתיחה.
+            {t.itineraryNextText}
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/prompt"
               className="rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-slate-950 hover:bg-amber-200"
-            >
-              חזרה להנחיית התכנון
-            </Link>
+            >{t.backToPrompt}</Link>
 <Link
   href="/weather"
   className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
->
-  מזג אוויר
-</Link>
+>{t.weather}</Link>
             <Link
               href="/search"
               className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
-            >
-              שינוי תשובות
-            </Link>
+            >{t.changeAnswers}</Link>
 
             <Link
               href="/"
               className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
-            >
-              חזרה לדף הבית
-            </Link>
+            >{t.backHome}</Link>
           </div>
         </section>
       </div>
@@ -815,11 +773,12 @@ const lodgingTypeItineraryNote =
 }
 
 function AnswerCard({ label, value }: { label: string; value?: string }) {
+  const { language } = useLanguage();
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <p className="text-sm font-semibold text-amber-300">{label}</p>
       <p className="mt-2 leading-7 text-slate-100">
-        {value && value.length > 0 ? value : "עדיין לא נבחר"}
+        {value || translations[language].notSelected}
       </p>
     </div>
   );

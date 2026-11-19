@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Language } from "./translations";
+import { translations, type Language } from "./translations";
 import { getSavedLanguage, saveLanguage } from "./language";
 
 type LanguageContextType = {
@@ -22,25 +22,27 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("he");
+  const t = translations[language];
 
   useEffect(() => {
     const savedLanguage = getSavedLanguage();
     setLanguageState(savedLanguage);
-
-    document.documentElement.lang = savedLanguage;
-    document.documentElement.dir = savedLanguage === "he" ? "rtl" : "ltr";
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === "he" ? "rtl" : "ltr";
+  }, [language]);
 
   function setLanguage(language: Language) {
     setLanguageState(language);
     saveLanguage(language);
-
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === "he" ? "rtl" : "ltr";
   }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>
+      <title>{t.appName}</title>
+      <meta name="description" content={t.appDescription} />
       {children}
     </LanguageContext.Provider>
   );

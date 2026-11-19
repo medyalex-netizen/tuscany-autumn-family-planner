@@ -1,52 +1,12 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 
 import { useAnswers } from "@/lib/use-answers";
+import { useLanguage } from "../../language-context";
+import { translations } from "../../translations";
+import { displayAnswer, displayAnswerList, displayText } from "../../display-text";
 
-
-const tripLengthIdeas = [
-  {
-    title: "טיול קצר — 4 עד 5 ימים",
-    text: "מתאים בעיקר לשילוב של פירנצה עם סיינה או אזור קיאנטי. פחות מתאים להרבה החלפות מלון או לנסיעות ארוכות מאוד.",
-  },
-  {
-    title: "טיול מאוזן — 6 עד 7 ימים",
-    text: "מאפשר לשלב עיר מרכזית, אזור כפרי אחד, עיירות יפות, נופים, אוכל, קניות וזמן חופשי.",
-  },
-  {
-    title: "טיול מלא — 8 עד 10 ימים",
-    text: "מאפשר לבנות מסלול עשיר יותר, עם פירנצה, מרכז טוסקנה, ואל ד'אורצ'ה, עיירות, נופים, אוכל וזמן חופשי.",
-  },
-];
-
-const baseIdeas = [
-  {
-    title: "פירנצה",
-    tag: "נקודת פתיחה חזקה",
-    text: "מתאימה להתחלת הטיול, לשיטוט בעיר יפה, קניות, אוכל, רחובות היסטוריים וטיולי יום נוחים.",
-  },
-  {
-    title: "סיינה",
-    tag: "בסיס עירוני נוח ונעים",
-    text: "עיר יפה עם אווירה היסטורית חזקה, מרכז נעים מאוד, ומיקום טוב להמשך טיולים בדרום ובמרכז טוסקנה.",
-  },
-  {
-    title: "קיאנטי / סן ג'ימיניאנו",
-    tag: "אזור יפה, מרכזי ונוח",
-    text: "מתאים לשילוב של עיירות יפות, כרמים, נופים, אוכל טוב ונסיעות נופיות קצרות יחסית.",
-  },
-  {
-    title: "ואל ד'אורצ'ה / פיינצה / מונטפולצ'יאנו",
-    tag: "אזור חשוב למסלול נופי",
-    text: "אזור מתאים לטיול בין עיירות ציוריות, כבישים יפים, תצפיות, אוכל מקומי ואווירה טוסקנית קלאסית.",
-  },
-  {
-    title: "לוקה / פיזה",
-    tag: "אפשרות לצפון־מערב טוסקנה",
-    text: "אזור מתאים ליום או יומיים של שילוב עיר יפה, אתרים מוכרים, רחובות נעימים וקצב טיול קל יחסית.",
-  },
-];
 
 const scenicIdeas = [
   {
@@ -72,28 +32,65 @@ const familyRules = [
     "לבדוק תחזית מזג אוויר לפני ימי נסיעה נופיים וטיולי כפרים.",
   "להתאים את ימי הכפרים והעיירות לאופן ההתניידות שנבחר, ולבדוק מראש חניה, ZTL או זמינות תחבורה ציבורית.",
     "לשמור אפשרות לשינוי מסלול במקרה של גשם, עומס, עייפות או שינוי בתוכניות.",
-  "לתת מקום גם למה שמעניין נערה בת 13, ולא רק לאטרקציות של מבוגרים.",
+  "לתת מקום גם למה שמעניין מתבגר/ת, ולא רק לאטרקציות של מבוגרים.",
 ];
 
 export default function ResultsPage() {
   const { answers } = useAnswers();
-
-  const teenText =
-    answers.teenPriorities && answers.teenPriorities.length > 0
-      ? answers.teenPriorities.join(", ")
-      : answers.teenPriority || "עדיין לא נבחר";
-      const lodgingPrioritiesText =
-  answers.lodgingPriorities && answers.lodgingPriorities.length > 0
-    ? answers.lodgingPriorities.join(", ")
-    : "עדיין לא נבחר";
+  const { language, setLanguage } = useLanguage();
+const t = translations[language];
+const d = (value?: string | null) => displayText(value, language);
+const translatedTripLengthIdeas = [
+  {
+    title: t.tripLengthIdea1Title,
+    text: t.tripLengthIdea1Text,
+  },
+  {
+    title: t.tripLengthIdea2Title,
+    text: t.tripLengthIdea2Text,
+  },
+  {
+    title: t.tripLengthIdea3Title,
+    text: t.tripLengthIdea3Text,
+  },
+];
+const translatedBaseIdeas = [
+  {
+    title: t.baseIdea1Title,
+    tag: t.baseIdea1Tag,
+    text: t.baseIdea1Text,
+  },
+  {
+    title: t.baseIdea2Title,
+    tag: t.baseIdea2Tag,
+    text: t.baseIdea2Text,
+  },
+  {
+    title: t.baseIdea3Title,
+    tag: t.baseIdea3Tag,
+    text: t.baseIdea3Text,
+  },
+  {
+    title: t.baseIdea4Title,
+    tag: t.baseIdea4Tag,
+    text: t.baseIdea4Text,
+  },
+  {
+    title: t.baseIdea5Title,
+    tag: t.baseIdea5Tag,
+    text: t.baseIdea5Text,
+  },
+];
+  const teenText = displayAnswerList(answers.teenPriorities.length ? answers.teenPriorities : [answers.teenPriority].filter(Boolean), language);
+  const lodgingPrioritiesText = displayAnswerList(answers.lodgingPriorities, language);
 const baseAreaText =
   answers.baseArea === "פירנצה"
-    ? "פירנצה מתאימה כבסיס מרכזי לטיול עם פחות החלפות לינה, הרבה אפשרויות אוכל, קניות וטיולי יום."
+    ? t.baseAreaTextFlorence
     : answers.baseArea === "סיינה"
-      ? "סיינה מתאימה כבסיס רגוע יותר לטיולים בדרום טוסקנה, קיאנטי ועמקים כפריים."
+      ? t.baseAreaTextSiena
       : answers.baseArea === "שילוב של שני אזורים"
-        ? "שילוב של שני אזורי לינה מאפשר ליהנות גם מעיר מרכזית וגם מאזור כפרי עם פחות נסיעות יומיות ארוכות."
-                : "בחירת אזור הלינה תשפיע על חלוקת הימים, כמות הנסיעות והאיזון בין ערים לאזור הכפרי.";
+        ? t.baseAreaTextTwoAreas
+        : t.baseAreaTextDefault;
  const travelStyleText =
   answers.travelStyle === "רגוע — מעט מקומות והרבה זמן חופשי"
     ? "בחרתם קצב רגוע. מומלץ לצמצם נסיעות והחלפות, להשאיר זמן חופשי ולהתמקד בפחות מקומות עם יותר עומק."
@@ -123,14 +120,14 @@ const baseAreaText =
             ? "אם התקציב גמיש, כדאי להשוות את המחיר מול המיקום, החניה, גודל החדר והשירותים שמקבלים בפועל."
                         : "אם עדיין לא החלטתם על תקציב לינה, כדאי לקבוע טווח מחיר ללילה לפני שמתחילים להשוות בין מלונות, דירות ואגריטוריסמו.";
                         const roomSetupText =
-  answers.roomSetup === "חדר אחד עם מיטה זוגית ומיטה נפרדת לנערה"
-    ? "מומלץ לוודא מראש שהמיטה הנפרדת לנערה היא מיטה אמיתית ונוחה, ולא רק ספה קטנה או מיטה מתקפלת."
+  answers.roomSetup === "חדר אחד עם מיטה זוגית ומיטה נפרדת למתבגר/ת"
+    ? "מומלץ לוודא מראש שהמיטה הנפרדת למתבגר/ת היא מיטה אמיתית ונוחה, ולא רק ספה קטנה או מיטה מתקפלת."
     : answers.roomSetup === "חדר משפחתי לשלושה"
       ? "מומלץ לבחור חדר משפחתי שמיועד באמת לשלושה אורחים, עם מספיק מרחב ואחסון למשפחה."
       : answers.roomSetup === "שני חדרים נפרדים"
         ? "אם מעדיפים שני חדרים נפרדים, כדאי לבדוק מראש אם ניתן להזמין חדרים סמוכים או מחוברים."
         : answers.roomSetup === "דירה עם חדר שינה וספה נפתחת"
-          ? "בדירה עם חדר שינה וספה נפתחת, כדאי לבדוק שהספה מתאימה לשינה נוחה לנערה בת 13 ושיש מספיק פרטיות ומרחב."
+          ? "בדירה עם חדר שינה וספה נפתחת, כדאי לבדוק שהספה מתאימה לשינה נוחה למתבגר/ת ושיש מספיק פרטיות ומרחב."
           : answers.roomSetup === "גמישים לפי המקום"
             ? "אם אתם גמישים בסידור החדר, כדאי להשוות בין הנוחות, גודל החדר, סוג המיטה הנוספת והמחיר."
             : "אם עדיין לא החלטתם על סידור החדר, כדאי להגדיר מראש מה נחשב סידור שינה נוח לשלושת בני המשפחה.";
@@ -147,7 +144,7 @@ const baseAreaText =
   }
 
   if (priorities.includes("חדר משפחתי")) {
-    parts.push("לוודא מראש שהחדר מתאים בנוחות לשני הורים ולנערה בת 13");
+    parts.push("לוודא מראש שהחדר מתאים בנוחות לשני הורים ולמתבגר/ת");
   }
 
   if (priorities.includes("מטבחון")) {
@@ -163,8 +160,8 @@ const baseAreaText =
   }
 
   return parts.length > 0
-    ? parts.join(". ") + "."
-    : "כדאי לבחור את מקום הלינה לפי הנוחות החשובה ביותר למשפחה.";
+    ? parts.map(d).join(". ") + "."
+    : d("כדאי לבחור את מקום הלינה לפי הנוחות החשובה ביותר למשפחה.");
 })();
           const teenInterestText = (() => {
       
@@ -214,10 +211,10 @@ const baseAreaText =
   }
 
   if (parts.length === 0) {
-    return "כדאי לשלב במסלול גם זמן שמתאים לנערה בת 13 ולא רק אתרי חובה למבוגרים.";
+    return d("כדאי לשלב במסלול גם זמן שמתאים למתבגר/ת ולא רק אתרי חובה למבוגרים.");
   }
 
-  return "העדפות הנערה מצביעות על עניין ב" + parts.join(". בנוסף, ") + ".";
+  return t.teenInterestPrefix + parts.map(d).join(t.teenInterestSeparator) + ".";
 })();
 const hasSavedAnswers = Object.values(answers).some((value) =>
   Array.isArray(value)
@@ -225,50 +222,74 @@ const hasSavedAnswers = Object.values(answers).some((value) =>
     : typeof value === "string" && value.trim().length > 0
 );
 return (
-    <main dir="rtl" className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+    <main
+  dir={language === "he" ? "rtl" : "ltr"}
+  className="min-h-screen bg-slate-950 px-6 py-10 text-white"
+>
       <div className="mx-auto max-w-6xl">
+        <div className="mb-6 flex gap-2">
+  <button
+    type="button"
+    onClick={() => setLanguage("he")}
+    className={`rounded-full px-4 py-2 ${
+      language === "he"
+        ? "bg-amber-300 text-slate-950"
+        : "border border-white/20 text-slate-200"
+    }`}
+  >
+    {t.hebrewLanguage}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setLanguage("en")}
+    className={`rounded-full px-4 py-2 ${
+      language === "en"
+        ? "bg-amber-300 text-slate-950"
+        : "border border-white/20 text-slate-200"
+    }`}
+  >
+    {t.englishLanguage}
+  </button>
+</div>
         <div className="mb-8 flex flex-wrap gap-4">
           <Link href="/" className="text-sm text-amber-300 hover:text-amber-200">
-            חזרה לדף הבית
+            {t.backHome}
           </Link>
 
           <Link
             href="/search"
             className="text-sm text-amber-300 hover:text-amber-200"
           >
-            חזרה לשאלות
+            {t.backToQuestions}
           </Link>
         </div>
 
         <section className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
-          <p dir="rtl" className="text-right text-sm font-semibold text-amber-300">
-            Tuscany Autumn Family Planner
-          </p>
+          <p className="text-sm font-semibold text-amber-300">{t.appName}</p>
 
           <h1 className="mt-4 text-4xl font-bold">
-            הצעת כיוון ראשונית לטיול משפחתי בטוסקנה
+           {t.resultsTitle}
           </h1>
 
           <p className="mt-5 max-w-3xl leading-8 text-slate-300">
-            העמוד הזה מציג כיוון ראשוני לפי התשובות שנשמרו. זה עדיין לא
-            מסלול סופי, אלא בסיס טוב להמשך תכנון.
+           {t.resultsIntro}
           </p>
         </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-          <h2 className="text-2xl font-bold">התשובות שנשמרו</h2>
+          <h2 className="text-2xl font-bold">{t.savedAnswersTitle}</h2>
 {!hasSavedAnswers && (
   <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-5">
     <p className="leading-8 text-slate-100">
-      עדיין לא נבחרו מספיק תשובות כדי להציג כיוון אישי. אפשר לחזור לשאלות
-      התכנון ולבחור את הפרטים החשובים להמשך.
-    </p>
+  {t.noSavedAnswersText}
+</p>
 
     <Link
       href="/search"
       className="mt-4 inline-flex rounded-full bg-amber-300 px-5 py-3 font-bold text-slate-950 hover:bg-amber-200"
     >
-      חזרה לשאלות התכנון
+     {t.backToPlanningQuestions}
     </Link>
   </div>
 )}
@@ -279,67 +300,92 @@ return (
   }
 >
           
-            <AnswerCard label="משך הטיול" value={answers.tripLength} />
+           <AnswerCard label={t.tripLengthLabel} value={displayAnswer(answers.tripLength, language)} />
 
 <AnswerCard
-  label="תאריך התחלה"
+  label={t.tripStartDateLabel}
   value={answers.tripStartDate}
 />
 
 <AnswerCard
-  label="תאריך סיום"
+  label={t.tripEndDateLabel}
   value={answers.tripEndDate}
-  
 />
+
+
 <AnswerCard
-  label="נקודת הגעה"
+  label={t.arrivalPointLabel}
   value={answers.arrivalPoint}
 />
 
 <AnswerCard
-  label="נקודת יציאה או חזרה"
+  label={t.departurePointLabel}
   value={answers.departurePoint}
 />
-            <AnswerCard label="קצב הטיול" value={answers.travelStyle} />
-            <AnswerCard label="אופן ההתניידות"
-                        value={answers.transportation}
-                        />
-            <AnswerCard
-              label="עניין בנופים ובטבע"
-              value={answers.scenicInterest}
-            />
-            <AnswerCard
-              label="סוג היום הנופי שמעניין אתכם"
-              value={answers.scenicOption}
-            />
-            <AnswerCard label="אזור לינה מועדף" value={answers.baseArea} />
-      <AnswerCard label="סוג מקום הלינה" value={answers.lodgingType} />
-      <AnswerCard label="תקציב לינה ללילה" value={answers.lodgingBudget} />
-      <AnswerCard
-  label="מה חשוב במקום הלינה"
+            <AnswerCard label={t.travelStyleLabel} value={displayAnswer(answers.travelStyle, language)} />
+
+<AnswerCard
+  label={t.transportationLabel}
+  value={displayAnswer(answers.transportation, language)}
+/>
+
+<AnswerCard
+  label={t.scenicInterestLabel}
+  value={displayAnswer(answers.scenicInterest, language)}
+/>
+
+<AnswerCard
+  label={t.scenicOptionLabel}
+  value={displayAnswer(answers.scenicOption, language)}
+/>
+
+<AnswerCard
+  label={t.baseAreaLabel}
+  value={displayAnswer(answers.baseArea, language)}
+/>
+
+<AnswerCard
+  label={t.lodgingTypeLabel}
+  value={displayAnswer(answers.lodgingType, language)}
+/>
+
+<AnswerCard
+  label={t.lodgingBudgetLabel}
+  value={displayAnswer(answers.lodgingBudget, language)}
+/>
+
+<AnswerCard
+  label={t.lodgingPrioritiesLabel}
   value={lodgingPrioritiesText}
 />
-         <AnswerCard
-  label="סידור חדר ומיטות"
-  value={answers.roomSetup}
-/> 
-            <AnswerCard label="מה חשוב לנערה בת 13" value={teenText} />
+
+<AnswerCard
+  label={t.roomSetupLabel}
+  value={displayAnswer(answers.roomSetup, language)}
+/>
+
+<AnswerCard
+  label={t.teenPrioritiesLabel}
+  value={teenText}
+/>
           </div>
         </section>
 {hasSavedAnswers && (
   <>
         <section className="mt-8">
-          <h2 className="text-3xl font-bold">כיוון לפי משך הטיול</h2>
+          <h2 className="text-3xl font-bold">
+  {t.tripLengthDirectionTitle}
+</h2>
 
           <div className="mt-5 grid gap-5 md:grid-cols-3">
             {(
   answers.tripLength === "4–5 ימים"
-    ? [tripLengthIdeas[0]]
+    ? [translatedTripLengthIdeas[0]]
     : answers.tripLength === "6–7 ימים"
-      ? [tripLengthIdeas[1]]
+      ? [translatedTripLengthIdeas[1]]
       : answers.tripLength === "8–10 ימים"
-        ? [tripLengthIdeas[2]]
-        : tripLengthIdeas
+        ? [translatedTripLengthIdeas[2]]
+        : translatedTripLengthIdeas
 ).map((item) => (
               <div
                 key={item.title}
@@ -355,29 +401,31 @@ return (
         </section>
 
         <section className="mt-10">
-          <h2 className="text-3xl font-bold">רעיונות לבסיסי לינה ואזורים לשילוב</h2>
+          <h2 className="text-3xl font-bold">
+  {t.baseIdeasTitle}
+</h2>
 <div className="mt-6 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-5">
   <h3 className="font-bold text-amber-200">
-    השפעת אזור הלינה על המסלול
-  </h3>
+  {t.baseAreaImpactTitle}
+</h3>
 
   <p className="mt-2 leading-7 text-slate-200">
     {baseAreaText}
   </p>
 </div>
  <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-  <h3 className="font-bold text-amber-200">
-    התאמת סוג מקום הלינה
-  </h3>
+ <h3 className="font-bold text-amber-200">
+  {t.lodgingTypeFitTitle}
+</h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {lodgingTypeText}
+    {d(lodgingTypeText)}
   </p>
 </div>
 
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
   <h3 className="font-bold text-amber-200">
-    מה חשוב לבדוק במקום הלינה
+    {t.accommodationChecks}
   </h3>
 
   <p className="mt-2 leading-7 text-slate-300">
@@ -386,34 +434,34 @@ return (
 </div> 
 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
   <h3 className="font-bold text-amber-200">
-    התאמת תקציב הלינה
+    {t.matchBudget}
   </h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {lodgingBudgetText}
+    {d(lodgingBudgetText)}
   </p>
 </div>      
          <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
   <h3 className="font-bold">
     <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
   <h3 className="font-bold text-amber-200">
-    התאמת סידור החדר והמיטות
+    {t.matchRoom}
   </h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {roomSetupText}
+    {d(roomSetupText)}
   </p>
 </div>
-    השפעת קצב הטיול על המסלול
+    {t.paceImpact}
   </h3>
 
   <p className="mt-2 leading-7 text-slate-300">
-    {travelStyleText}
+    {d(travelStyleText)}
   </p>
 </div>
     <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5">
   <h3 className="font-bold">
-    התאמת המסלול לנערה בת 13
+    {t.matchTeen}
   </h3>
 
   <p className="mt-2 leading-7 text-slate-300">
@@ -421,7 +469,7 @@ return (
   </p>
 </div>     
           <div className="mt-5 grid gap-5 md:grid-cols-2">
-            {baseIdeas.map((item) => (
+            {translatedBaseIdeas.map((item) => (
               <div
                 key={item.title}
                 className="rounded-3xl border border-white/10 bg-slate-900/80 p-6"
@@ -437,30 +485,30 @@ return (
         </section>
 
         <section className="mt-10">
-          <h2 className="text-3xl font-bold">רעיונות לימי נוף שאפשר לשקול</h2>
+          <h2 className="text-3xl font-bold">{t.scenicIdeas}</h2>
 
           <div className="mt-5 grid gap-5 md:grid-cols-3">
             {scenicIdeas.map((item) => (
               <div
-                key={item.name}
+                key={d(item.name)}
                 className="rounded-3xl border border-white/10 bg-white/5 p-6"
               >
                 <h3 dir="rtl" className="text-right text-xl font-bold text-amber-200">
-                  {item.name}
+                  {d(item.name)}
                 </h3>
-                <p className="mt-3 leading-7 text-slate-300">{item.text}</p>
+                <p className="mt-3 leading-7 text-slate-300">{d(item.text)}</p>
               </div>
             ))}
           </div>
         </section>
 
         <section className="mt-10 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-          <h2 className="text-3xl font-bold">כללי תכנון למשפחה</h2>
+          <h2 className="text-3xl font-bold">{t.familyRules}</h2>
 
           <div className="mt-5 space-y-3">
             {familyRules.map((rule) => (
               <p key={rule} className="leading-7 text-slate-300">
-                ✓ {rule}
+                ✓ {d(rule)}
               </p>
             ))}
           </div>
@@ -468,12 +516,11 @@ return (
 
         <section className="mt-10 rounded-3xl border border-amber-300/30 bg-amber-300/10 p-6">
           <h2 className="text-2xl font-bold text-amber-200">
-            השלב הבא
+            {t.nextStep}
           </h2>
 
           <p className="mt-3 leading-8 text-slate-200">
-            אחרי שהכיוון נראה נכון, אפשר להמשיך לעמוד ההנחיה למתכנן. שם תיווצר
-            הנחיה מסודרת שאפשר להשתמש בה כדי לבנות מסלול מפורט יותר.
+            {t.resultsNextStepText}
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -481,20 +528,20 @@ return (
               href="/prompt"
               className="rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-slate-950 hover:bg-amber-200"
             >
-              המשך להנחיית תכנון
+              {t.continueToPrompt}
             </Link>
             <Link
   href="/weather"
   className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
 >
-  מזג אוויר
+  {t.weather}
 </Link>
 
             <Link
               href="/search"
               className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
             >
-              שינוי תשובות
+              {t.changeAnswers}
             </Link>
           </div>
         </section>
@@ -507,11 +554,12 @@ return (
 }
 
 function AnswerCard({ label, value }: { label: string; value?: string }) {
+  const { language } = useLanguage();
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <p className="text-sm font-semibold text-amber-300">{label}</p>
       <p className="mt-2 leading-7 text-slate-100">
-        {value && value.length > 0 ? value : "עדיין לא נבחר"}
+        {value || translations[language].notSelected}
       </p>
     </div>
   );

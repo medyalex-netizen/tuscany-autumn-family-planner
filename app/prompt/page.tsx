@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 
 import { useAnswers } from "@/lib/use-answers";
+import { useLanguage } from "../../language-context";
+import { displayAnswer, displayAnswerList, displayText } from "../../display-text";
+import { translations } from "../../translations";
 
 
 const plannerRules = [
@@ -11,175 +13,140 @@ const plannerRules = [
   "להשתמש בתשובות המשפחתיות שנשמרו בעמוד השאלות.",
   "לא להעמיס יותר מדי על כל יום.",
   "לשלב זמן קניות, אוכל, קפה ושיטוט רגוע.",
-  "לתת מקום גם למה שמעניין נערה בת 13.",
+  "לתת מקום גם למה שמעניין מתבגר/ת.",
   "להשאיר יום נסיעה נופי כאפשרות מומלצת, אבל לא חובה.",
   "לא לשלב יותר מדי כפרים, עיירות או נסיעות ארוכות אם הטיול קצר מדי.",
   "לבדוק שעות פתיחה, זמני נסיעה, חניה, מזג אוויר ועלויות לפני הזמנה.",
 ];
 export default function PromptPage() {
   const { answers } = useAnswers();
-
-  const teenText =
-    answers.teenPriorities && answers.teenPriorities.length > 0
-      ? answers.teenPriorities.join(", ")
-      : answers.teenPriority || "עדיין לא נבחר";
-const lodgingPrioritiesText =
-  answers.lodgingPriorities && answers.lodgingPriorities.length > 0
-    ? answers.lodgingPriorities.join(", ")
-    : "עדיין לא נבחר";
-  const promptText = useMemo(() => {
-    return `Create a realistic Tuscany autumn family itinerary.
-
-Family profile:
-- Two parents
-- One 13-year-old daughter
-- Trip length: up to 10 days
-
-Saved family answers:
-- Trip length: ${answers.tripLength || "עדיין לא נבחר"}
-- Trip start date: ${answers.tripStartDate || "עדיין לא נבחר"}
-- Trip end date: ${answers.tripEndDate || "עדיין לא נבחר"}
-- Arrival point: ${answers.arrivalPoint || "עדיין לא נבחר"}
-- Departure point: ${answers.departurePoint || "עדיין לא נבחר"}
-- Travel pace: ${answers.travelStyle || "עדיין לא נבחר"}
-- Transportation: ${answers.transportation || "עדיין לא נבחר"}
-- Scenery and nature interest: ${answers.scenicInterest || "עדיין לא נבחר"}
-- Preferred scenic day: ${answers.scenicOption || "עדיין לא נבחר"}
-- Preferred base area: ${answers.baseArea || "עדיין לא נבחר"}
-- Preferred lodging type: ${answers.lodgingType || "עדיין לא נבחר"}
-- Lodging budget per night: ${answers.lodgingBudget || "עדיין לא נבחר"}
-- Preferred room/bed setup: ${answers.roomSetup || "עדיין לא נבחר"}
-- Lodging priorities: ${lodgingPrioritiesText}
-
-- Teen-friendly priorities: ${teenText}
-
-Main goals:
-- Historic cities, picturesque towns, local food, shopping, scenery, and relaxed family time
-- Florence, Siena, Lucca, Pisa, Chianti, San Gimignano, and Val d'Orcia when they fit the trip length
-- Beautiful places for photos
-- Gelato, cafés, local food, and relaxed city time
-- A balanced combination of cities, towns, countryside, and free time
-- Activities that are enjoyable for a 13-year-old girl
-
-Important planning rules:
-- Do not overload the days.
-- Keep walking and driving reasonable.
-- Include enough free time.
-- Do not force too many towns, villages, or long drives into a short trip.
-- Adapt the route to the selected transportation option.
-- Avoid driving inside restricted historic-center zones unless access is clearly permitted.
-- Check parking and ZTL restrictions before driving into Florence, Siena, Lucca, Pisa, or other historic towns.
-- Scenic driving days are most relevant when the trip includes Chianti, Val d'Orcia, Pienza, Montepulciano, or San Gimignano.
-- Florence, Siena, Lucca, and Pisa can be combined with countryside stays depending on trip length and transportation.
-- Outdoor and countryside plans should depend on weather, driving time, road conditions, cost, and family energy.
-- Before final booking, check official current sources for opening hours, driving restrictions, parking, weather, ticket prices, local events, and accommodation policies.
-
-Please first ask any missing clarification questions.
-Only after that, suggest a realistic day-by-day itinerary.`;
-  }, [answers, teenText, lodgingPrioritiesText]);
+  const { language } = useLanguage();
+  const t = translations[language];
+  const answerLabel = (value: string) => displayAnswer(value, language);
+  const teenText = displayAnswerList(
+    answers.teenPriorities.length ? answers.teenPriorities : [answers.teenPriority].filter(Boolean),
+    language
+  );
+  const lodgingPrioritiesText = displayAnswerList(answers.lodgingPriorities, language);
+  const answerLines = [
+    [t.tripLengthLabel, answerLabel(answers.tripLength)],
+    [t.tripStartDateLabel, answers.tripStartDate],
+    [t.tripEndDateLabel, answers.tripEndDate],
+    [t.arrivalPointLabel, answers.arrivalPoint],
+    [t.promptDepartureLabel, answers.departurePoint],
+    [t.travelStyleLabel, answerLabel(answers.travelStyle)],
+    [t.transportationLabel, answerLabel(answers.transportation)],
+    [t.scenicInterestLabel, answerLabel(answers.scenicInterest)],
+    [t.scenicOptionLabel, answerLabel(answers.scenicOption)],
+    [t.baseAreaLabel, answerLabel(answers.baseArea)],
+    [t.lodgingTypeLabel, answerLabel(answers.lodgingType)],
+    [t.lodgingBudgetLabel, answerLabel(answers.lodgingBudget)],
+    [t.roomSetupLabel, answerLabel(answers.roomSetup)],
+    [t.lodgingPrioritiesLabel, lodgingPrioritiesText],
+    [t.teenPrioritiesLabel, teenText],
+  ].map(([label, value]) => `${label}: ${value || t.notSelected}`);
+  const bullets = (items: readonly string[]) => items.map((item) => `- ${item}`).join("\n");
+  const promptText = [
+    t.promptTitle,
+    `${t.promptFamilyTitle}:\n${bullets([t.promptParents, t.promptTeenager, `${t.tripLengthLabel}: ${t.promptMaximumDuration}`])}`,
+    `${t.promptSavedAnswers}:\n${bullets(answerLines)}`,
+    `${t.promptGoalsTitle}:\n${bullets(t.promptGoals)}`,
+    `${t.promptPlanningRulesTitle}:\n${bullets(t.promptPlanningRules)}`,
+    t.promptClosing,
+  ].join("\n\n");
 
   return (
-    <main dir="rtl" className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+    <main dir={language === "he" ? "rtl" : "ltr"} className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 flex flex-wrap gap-4">
-          <Link href="/" className="text-sm text-amber-300 hover:text-amber-200">
-            חזרה לדף הבית
-          </Link>
+          <Link href="/" className="text-sm text-amber-300 hover:text-amber-200">{t.backHome}</Link>
 
           <Link
             href="/search"
             className="text-sm text-amber-300 hover:text-amber-200"
-          >
-            שינוי תשובות
-          </Link>
+          >{t.changeAnswers}</Link>
 
           <Link
             href="/results"
             className="text-sm text-amber-300 hover:text-amber-200"
-          >
-            חזרה להצעת הכיוון
-          </Link>
+          >{t.backToResults}</Link>
         </div>
 
         <section className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
-          <p dir="ltr" className="text-right text-sm font-semibold text-amber-300">
-            Tuscany Autumn Family Planner
-          </p>
+          <p className="text-sm font-semibold text-amber-300">{t.appName}</p>
 
           <p className="mt-3 leading-8 text-slate-200">
-            אחרי שהכיוון נראה נכון, אפשר להמשיך לעמוד ההנחיה למתכנן. שם תיווצר
-            הנחיה מסודרת שאפשר להשתמש בה כדי לבנות מסלול מפורט יותר.
+            {t.promptLead}
           </p>
           <h1 className="mt-3 text-4xl font-bold text-white">
-  הנחיית תכנון אישית להמשך
+  {t.resultsTitle}
 </h1>
 
 <p className="mt-5 max-w-3xl leading-8 text-slate-300">
-  העמוד הזה מכין הנחיה מסודרת לפי התשובות שנשמרו. אפשר להשתמש בה כדי
-  לקבל מסלול אישי בצ׳אט: העתיקו את ההנחיה והדביקו אותה בכלי התכנון שבו תשתמשו. המסלול באתר נשאר דוגמה ואינו מתעדכן מתשובת הצ׳אט.
+  {t.promptIntro}
 </p>
         </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-          <h2 className="text-2xl font-bold">התשובות המשפחתיות שנשמרו</h2>
+          <h2 className="text-2xl font-bold">{t.promptSavedAnswers}</h2>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <AnswerCard label="משך הטיול" value={answers.tripLength} />
+            <AnswerCard label={t.tripLengthLabel} value={answerLabel(answers.tripLength)} />
 
-<AnswerCard label="סגנון הטיול" value={answers.travelStyle} />
+<AnswerCard label={t.travelStyleLabel} value={answerLabel(answers.travelStyle)} />
 
 <AnswerCard
-  label="אופן ההתניידות"
-  value={answers.transportation}
+  label={t.transportationLabel}
+  value={answerLabel(answers.transportation)}
 />
 
 <AnswerCard
-  label="עניין בנופים ובטבע"
-  value={answers.scenicInterest}
+  label={t.scenicInterestLabel}
+  value={answerLabel(answers.scenicInterest)}
 />
 
 <AnswerCard
-  label="סוג היום הנופי שמעניין אתכם"
-  value={answers.scenicOption}
+  label={t.scenicOptionLabel}
+  value={answerLabel(answers.scenicOption)}
 />
 
-            <AnswerCard label="אזור לינה מועדף" value={answers.baseArea} />
-            <AnswerCard label="מה חשוב לנערה בת 13" value={teenText} />
+            <AnswerCard label={t.baseAreaLabel} value={answerLabel(answers.baseArea)} />
+            <AnswerCard label={t.teenPrioritiesLabel} value={teenText} />
           </div>
         </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">
-          <h2 className="text-2xl font-bold">הנחיה שנוצרה למתכנן</h2>
+          <h2 className="text-2xl font-bold">{t.promptGenerated}</h2>
 
           <p className="mt-3 leading-7 text-slate-300">
-           ההנחיה כתובה בעיקר באנגלית כדי שיהיה קל להדביק אותה בכל כלי תכנון או צ׳אט אחר. התשובות המשפחתיות נשארות כפי שנבחרו בעברית, כדי לא לאבד את המשמעות המקורית.
+           {t.promptCopyHelp}
           </p>
 
           <pre
-            dir="ltr"
-            className="mt-5 whitespace-pre-wrap rounded-3xl border border-white/10 bg-slate-950 p-5 text-left text-sm leading-7 text-slate-100"
+            dir={language === "he" ? "rtl" : "ltr"}
+            className="mt-5 whitespace-pre-wrap rounded-3xl border border-white/10 bg-slate-950 p-5 text-start text-sm leading-7 text-slate-100"
           >
             {promptText}
           </pre>
         </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-          <h2 className="text-2xl font-bold">כללי התנהגות למתכנן</h2>
+          <h2 className="text-2xl font-bold">{t.promptRules}</h2>
 
           <div className="mt-5 space-y-3">
             {plannerRules.map((rule) => (
               <p key={rule} className="leading-7 text-slate-300">
-                ✓ {rule}
+                ✓ {displayText(rule, language)}
               </p>
             ))}
           </div>
         </section>
 
         <section className="mt-8 rounded-3xl border border-amber-300/30 bg-amber-300/10 p-6">
-          <h2 className="text-2xl font-bold text-amber-200">המשך</h2>
+          <h2 className="text-2xl font-bold text-amber-200">{t.continueLabel}</h2>
 
           <p className="mt-3 leading-8 text-slate-200">
-            מכאן אפשר להמשיך למסלול לדוגמה, או לחזור אחורה ולשנות את התשובות.
+            {t.promptNext}
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -187,22 +154,18 @@ Only after that, suggest a realistic day-by-day itinerary.`;
               href="/itinerary"
               className="rounded-full bg-amber-300 px-6 py-3 text-center font-bold text-slate-950 hover:bg-amber-200"
             >
-              צפייה במסלול לדוגמה
+              {t.viewSampleItinerary}
             </Link>
 
             <Link
               href="/results"
               className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
-            >
-              חזרה להצעת הכיוון
-            </Link>
+            >{t.backToResults}</Link>
 
             <Link
               href="/search"
               className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-slate-100 hover:border-amber-300"
-            >
-              שינוי תשובות
-            </Link>
+            >{t.changeAnswers}</Link>
           </div>
         </section>
       </div>
@@ -210,12 +173,12 @@ Only after that, suggest a realistic day-by-day itinerary.`;
   );
 }
 
-function AnswerCard({ label, value }: { label: string; value?: string }) {
+function AnswerCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <p className="text-sm font-semibold text-amber-300">{label}</p>
       <p className="mt-2 leading-7 text-slate-100">
-        {value && value.length > 0 ? value : "עדיין לא נבחר"}
+        {value}
       </p>
     </div>
   );

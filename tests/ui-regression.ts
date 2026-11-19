@@ -18,10 +18,11 @@ async function run() {
   const {default: Prompt} = await import('../app/prompt/page');
   const {default: Weather} = await import('../app/weather/page');
   const {STORAGE_KEY} = await import('../lib/answers');
+  const {LanguageProvider} = await import('../language-context');
   const root = createRoot(document.getElementById('root')!);
   const render = async (Page: typeof Search) => {
     await act(async () => root.render(null));
-    await act(async () => root.render(createElement(Page)));
+    await act(async () => root.render(createElement(LanguageProvider, {children: createElement(Page)})));
   };
   const text = () => document.body.textContent || '';
   const click = async (label: string) => {
@@ -48,7 +49,7 @@ async function run() {
   }
   await click('סיינה'); await click('רכבות ותחבורה ציבורית בלבד');
   await render(Results); assert.ok(text().includes('סיינה')); checks++;
-  await render(Prompt); assert.ok(text().includes('- Preferred base area: סיינה') && text().includes('- Transportation: רכבות ותחבורה ציבורית בלבד')); checks++;
+  await render(Prompt); assert.ok(text().includes('- אזור לינה מועדף: סיינה') && text().includes('- אופן ההתניידות: רכבות ותחבורה ציבורית בלבד')); checks++;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify({tripStartDate: '2026-10-28', tripEndDate: '2026-11-02', tripLength: '8–10 ימים'}));
   await render(Itinerary);
   assert.equal(Array.from(document.querySelectorAll('p')).filter(p => /^יום \d+$/.test(p.textContent?.trim() || '')).length, 6); checks++;
@@ -80,6 +81,29 @@ async function run() {
     return {ok:true,json:async () => ({results:[{name:'Siena',country_code:'US'}]})};
   }) as unknown as typeof fetch;
   await render(Weather); assert.ok(text().includes('לא נמצא מיקום לתחזית')); checks++;
+  await render(Search);
+  await click('אנגלית');
+  await click('Family apartment');
+  assert.equal(JSON.parse(window.localStorage.getItem(STORAGE_KEY)!).lodgingType, 'דירה משפחתית');
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    baseArea: 'סיינה',
+    transportation: 'רכבות ותחבורה ציבורית בלבד',
+    lodgingType: 'דירה משפחתית',
+    lodgingPriorities: ['חניה נוחה', 'ארוחת בוקר'],
+    teenPriorities: ['קניות ורחובות יפים', 'גלידה, קינוחים ובתי קפה'],
+    arrivalPoint: 'פירנצה',
+    departurePoint: 'פיזה',
+  }));
+  for (const Page of [Results, Prompt, Itinerary]) {
+    await render(Page);
+    const content = text();
+    assert.match(content, /Family apartment/);
+    assert.match(content, /Convenient parking, Breakfast/);
+    assert.match(content, /פירנצה/);
+    assert.match(content, /פיזה/);
+    assert.doesNotMatch(content.replaceAll('פירנצה', '').replaceAll('פיזה', ''), /[\u0590-\u05ff]/u);
+    checks++;
+  }
   await act(async () => root.unmount());
   console.log(`${checks} UI scenarios passed`);
 }

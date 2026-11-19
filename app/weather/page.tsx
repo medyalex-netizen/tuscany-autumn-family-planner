@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 
 
 import { useAnswers } from "@/lib/use-answers";
+import { useLanguage } from "../../language-context";
+import { displayAnswer, displayText } from "../../display-text";
+import { translations } from "../../translations";
 import { cityForBase, weatherCities } from "@/lib/weather";
 
 type DailyForecast = {
@@ -17,11 +20,10 @@ type DailyForecast = {
 
 const ui = {
   he: {
-    appName: "Tuscany Autumn Family Planner",
     title: "בדיקת מזג אוויר וטמפרטורות",
     back: "חזרה למסלול",
     badge: "תחזית חיה",
-    weatherFor: "מזג אוויר ב-",
+    weatherFor: "מזג אוויר ב",
     description:
       "הדף הזה מציג טמפרטורה נוכחית ותחזית לימים הקרובים. אם הטיול הוא בתאריך רחוק, צריך לבדוק שוב קרוב יותר לנסיעה.",
     status: "מצב",
@@ -75,7 +77,6 @@ const ui = {
 },
   },
   en: {
-    appName: "Tuscany Autumn Family Planner",
     title: "Weather and temperature check",
     back: "Back to itinerary",
     badge: "Live forecast",
@@ -110,20 +111,20 @@ const ui = {
     noLocation: "No forecast location found. Try another destination.",
     failed: "Could not load forecast. Check internet connection or try again.",
     hotTips: [
-      "Start the day earlier.",
-      "Avoid long walks after lunch.",
-      "Add hotel rest during the hottest hours.",
-      "Use more taxis.",
-      "Choose churches, museums, cafes, and shaded places.",
-      "Keep dinner close to the hotel.",
+      "Start earlier and schedule outdoor activities for the coolest hours.",
+      "During the hottest hours, choose shaded streets, a covered market, a short museum visit or a café.",
+      "Leave time for a rest, gelato or a relaxed meal in the middle of the day.",
+      "Bring water, hats and sunscreen.",
+      "Shorten a day of village visits or viewpoints if the heat is tiring the family.",
+      "Move outdoor activities to later in the day and keep the plan flexible.",
     ],
     rainTips: [
-      "Be careful with slippery stones and uneven sidewalks.",
-      "Use taxis instead of long walks.",
-      "Choose museums, churches, cafes, or covered markets.",
-      "Shorten walking routes.",
-      "Add extra travel time between places.",
-      "Do not commit to a long walking tour in heavy rain.",
+      "Choose a short museum visit, a covered market, a café or an indoor food activity.",
+      "Allow more time between stops and keep the schedule manageable.",
+      "Swap a day of viewpoints or villages for a more flexible city day.",
+      "Bring umbrellas, light jackets and shoes with good grip.",
+      "Avoid long drives on rural roads if visibility or road conditions are poor.",
+      "Check the forecast again in the morning and reorder the days if needed.",
     ],
     checkTexts: {
   weather: "Check the latest forecast, rain chance, heat, and wind before each day.",
@@ -133,7 +134,6 @@ const ui = {
 },
   },
   ro: {
-    appName: "Tuscany Autumn Family Planner",
     title: "Verificare vreme si temperaturi",
     back: "Inapoi la itinerar",
     badge: "Prognoza live",
@@ -196,16 +196,22 @@ const ui = {
 
 export default function WeatherPage() {
   const { answers, ready } = useAnswers();
+  const { language } = useLanguage();
   const [manualCity, setManualCity] = useState("");
   const destination = manualCity || cityForBase(answers.baseArea);
-  const cityLabel = weatherCities.find(city => city.name === destination)?.label || destination;
-  const travelDates = [answers.tripStartDate, answers.tripEndDate].filter(Boolean).join(" עד ");
+  const selectedCity = weatherCities.find(city => city.name === destination);
+  const cityLabel = selectedCity ? displayText(selectedCity.label, language) : destination;
+  const travelDates = [answers.tripStartDate, answers.tripEndDate].filter(Boolean).join(language === "he" ? " עד " : " to ");
 
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [feelsLike, setFeelsLike] = useState<number | null>(null);
   const [dailyForecast, setDailyForecast] = useState<DailyForecast[]>([]);
   const [weatherStatus, setWeatherStatus] = useState("loadingLocation");
-  const [matchedLocation, setMatchedLocation] = useState("");
+  const [matchedPlace, setMatchedPlace] = useState<{ name: string; country?: string } | null>(null);
+  const matchedCity = weatherCities.find(city => city.name === matchedPlace?.name);
+  const matchedName = matchedCity ? displayText(matchedCity.label, language) : matchedPlace?.name;
+  const matchedCountry = matchedPlace?.country === "Italy" && language === "he" ? "איטליה" : matchedPlace?.country;
+  const matchedLocation = [matchedName, matchedCountry].filter(Boolean).join(", ");
 
   
   useEffect(() => {
@@ -219,7 +225,7 @@ export default function WeatherPage() {
         setCurrentTemp(null);
         setFeelsLike(null);
         setDailyForecast([]);
-        setMatchedLocation("");
+        setMatchedPlace(null);
 
         const geoResponse = await fetch(
           `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
@@ -238,9 +244,7 @@ export default function WeatherPage() {
         const place = geoData.results.find((place: { country_code: string }) => place.country_code === "IT");
         if (controller.signal.aborted) return;
 
-        setMatchedLocation(
-          `${place.name}${place.country ? ", " + place.country : ""}`
-        );
+        setMatchedPlace({ name: place.name, country: place.country });
 
         setWeatherStatus("loadingTemps");
 
@@ -280,8 +284,8 @@ export default function WeatherPage() {
 
   
     
-  const t = ui.he;
-const isHebrew = true;
+  const t = ui[language];
+  const isHebrew = language === "he";
   const statusText =
     weatherStatus === "loadingLocation"
       ? t.loadingLocation
@@ -295,15 +299,15 @@ const isHebrew = true;
 
   return (
     <main
-      dir="rtl"
-lang="he"
-className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
+      dir={isHebrew ? "rtl" : "ltr"}
+lang={language}
+className="min-h-screen bg-slate-950 px-6 py-10 text-start text-white"
     >
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 flex flex-col gap-4 sm:flex-row-reverse sm:items-center sm:justify-between">
           <div>
             <p className="text-lg font-bold text-blue-700">
-              {t.appName}
+              {translations[language].appName}
             </p>
             <h1 className="text-4xl font-bold">{t.title}</h1>
           </div>
@@ -322,17 +326,21 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
           </p>
 
           <h2 className="text-4xl font-bold">
-            מזג אוויר ב{cityLabel}
+            {t.weatherFor}{cityLabel}
           </h2>
 
           <label className="mt-5 block text-slate-200">
-            יעד לבדיקת התחזית
+            {language === "he" ? "יעד לבדיקת התחזית" : "Forecast location"}
             <select value={destination} onChange={event => setManualCity(event.target.value)} disabled={!ready}
               className="mr-3 rounded-xl border border-white/20 bg-slate-950 p-3 text-white">
-              {weatherCities.map(city => <option key={city.name} value={city.name}>{city.label}</option>)}
+              {weatherCities.map(city => <option key={city.name} value={city.name}>{displayText(city.label, language)}</option>)}
             </select>
           </label>
-          <p className="mt-3 text-slate-300">היעד הראשוני נבחר לפי אזור הלינה. באזור כפרי זו תחזית לעיר סמוכה; באזור משולב התחילו בפירנצה ובחרו את היעד הרצוי. התחזית היא לשבוע הקרוב, ולא לתאריכי טיול רחוקים.</p>
+          <p className="mt-3 text-slate-300">
+    {language === "he"
+      ? "היעד הראשוני נבחר לפי אזור הלינה. באזור כפרי זו תחזית לעיר סמוכה; באזור משולב התחילו בפירנצה ובחרו את היעד הרצוי. התחזית היא לשבוע הקרוב, ולא לתאריכי טיול רחוקים."
+      : "The initial forecast location is selected from the preferred accommodation area. For a rural area, the forecast uses a nearby town. For a mixed-area trip, start with Florence and select the location you want. The forecast covers the coming week, not distant travel dates."}
+  </p>
 
           <p className="mt-4 max-w-3xl text-xl leading-8 text-slate-300">
             {t.description}
@@ -370,7 +378,7 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
               <p className="text-sm font-semibold text-slate-300">{t.tripLength}</p>
-              <p className="mt-2 text-xl font-bold">  {answers.tripLength || t.notSelected}</p>
+              <p className="mt-2 text-xl font-bold">  {answers.tripLength ? displayAnswer(answers.tripLength, language) : t.notSelected}</p>
             </div>
 
             
@@ -386,7 +394,7 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
                 <p className="text-lg font-bold">{day.date}</p>
                 <p className="mt-2 text-lg">{t.max}: {Math.round(day.max)}°C</p>
                 <p className="text-lg">{t.min}: {Math.round(day.min)}°C</p>
-                <p className="text-lg">{t.rainChance}: {day.rainChance === null ? "לא זמין" : `${day.rainChance}%`}</p>
+                <p className="text-lg">{t.rainChance}: {day.rainChance === null ? (language === "he" ? "לא זמין" : "Not available") : `${day.rainChance}%`}</p>
               </div>
             ))}
           </div>
@@ -467,5 +475,3 @@ className="min-h-screen bg-slate-950 px-6 py-10 text-right text-white"
     </main>
   );
 }
-
-
